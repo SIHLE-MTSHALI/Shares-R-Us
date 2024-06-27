@@ -13,12 +13,13 @@ import AddAsset from './pages/AddAsset';
 import UserSettings from './pages/UserSettings';
 import Watchlist from './pages/Watchlist';
 import Notification from './components/Notification';
+import ErrorBoundary from './components/ErrorBoundary';
 
 const AppContent = () => {
   const notifications = useSelector(state => state.notifications);
 
   return (
-    <>
+    <ErrorBoundary>
       <Router>
         <Switch>
           <Route exact path="/" component={Dashboard} />
@@ -34,7 +35,7 @@ const AppContent = () => {
       {notifications.map(notification => (
         <Notification key={notification.id} message={notification.message} type={notification.type} />
       ))}
-    </>
+    </ErrorBoundary>
   );
 };
 

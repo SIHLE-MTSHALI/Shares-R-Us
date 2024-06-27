@@ -1,26 +1,33 @@
 import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { useHistory } from 'react-router-dom';
 import { loginStart, loginSuccess, loginFailure } from '../redux/reducers/authReducer';
-import axios from 'axios';
+import { login } from '../services/api';
 import Layout from '../components/Layout';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const dispatch = useDispatch();
   const history = useHistory();
-  const { loading, error } = useSelector(state => state.auth);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError('');
     dispatch(loginStart());
     try {
-      const response = await axios.post('/api/v1/login', { email, password });
-      dispatch(loginSuccess(response.data));
+      const response = await login({ email, password });
+      localStorage.setItem('token', response.data.token);
+      dispatch(loginSuccess(response.data.user));
       history.push('/');
     } catch (err) {
-      dispatch(loginFailure(err.response?.data?.detail || 'An error occurred'));
+      setError(err.response?.data?.message || 'An error occurred during login');
+      dispatch(loginFailure(err.response?.data?.message || 'An error occurred during login'));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -51,7 +58,11 @@ const Login = () => {
             className="w-full px-3 py-2 border rounded-md"
           />
         </div>
-        <button type="submit" disabled={loading} className="w-full bg-accent text-white py-2 rounded-md hover:bg-opacity-90 transition-colors">
+        <button 
+          type="submit" 
+          disabled={loading} 
+          className="w-full bg-accent text-white py-2 rounded-md hover:bg-opacity-90 transition-colors disabled:opacity-50"
+        >
           {loading ? 'Logging in...' : 'Login'}
         </button>
       </form>

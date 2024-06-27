@@ -1,8 +1,14 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { subscribeToAsset, unsubscribeFromAsset } from '../services/websocket';
 
 const Stock = ({ symbol, name, price, change, quantity }) => {
   const isPositive = change >= 0;
+
+  useEffect(() => {
+    subscribeToAsset(symbol);
+    return () => unsubscribeFromAsset(symbol);
+  }, [symbol]);
 
   return (
     <div className="bg-white p-4 rounded-lg shadow-md">
