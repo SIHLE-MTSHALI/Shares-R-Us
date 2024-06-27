@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     ALPHA_VANTAGE_API_KEY: str
+    COINAPI_API_KEY: str
 
     class Config:
         env_file = ".env"
