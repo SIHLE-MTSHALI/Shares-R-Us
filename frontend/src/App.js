@@ -11,6 +11,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import AddAsset from './pages/AddAsset';
 import UserSettings from './pages/UserSettings';
+import Watchlist from './pages/Watchlist';
 import Notification from './components/Notification';
 
 const AppContent = () => {
@@ -27,6 +28,7 @@ const AppContent = () => {
           <Route path="/register" component={Register} />
           <Route path="/portfolio/:portfolioId/add-asset" component={AddAsset} />
           <Route path="/settings" component={UserSettings} />
+          <Route path="/watchlist" component={Watchlist} />
         </Switch>
       </Router>
       {notifications.map(notification => (
