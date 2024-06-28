@@ -1,8 +1,8 @@
 import io from 'socket.io-client';
 import { addNotification } from '../redux/reducers/notificationsReducer';
-import store from '../redux/store';
+import { store } from '../redux/store';
 
-const socket = io('http://localhost:5000'); // Replace with your WebSocket server URL
+const socket = io('http://localhost:8000'); // Replace with your WebSocket server URL
 
 socket.on('connect', () => {
   console.log('Connected to WebSocket server');

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { useParams, useHistory } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Layout from '../components/Layout';
 import { addPortfolio } from '../redux/reducers/portfolioReducer';
@@ -12,7 +12,7 @@ const AddAsset = () => {
   const [error, setError] = useState('');
   const { portfolioId } = useParams();
   const dispatch = useDispatch();
-  const history = useHistory();
+  const history = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
