@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from ...services.crypto_service import get_crypto_data
+from backend.app.services.crypto_service import get_crypto_data
 
 router = APIRouter()
 

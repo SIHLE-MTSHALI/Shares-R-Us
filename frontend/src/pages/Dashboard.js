@@ -47,8 +47,8 @@ const Dashboard = () => {
           {currentPortfolios.map(portfolio => (
             <Link key={portfolio.id} to={`/portfolio/${portfolio.id}`} className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
               <h2 className="text-xl font-semibold mb-2">{portfolio.name}</h2>
-              <p className="text-gray-600">Total Value: ${portfolio.totalValue.toFixed(2)}</p>
-              <p className="text-gray-600">Number of Assets: {portfolio.assetCount}</p>
+              <p className="text-gray-600">Total Value: ${portfolio.totalValue?.toFixed(2) || '0.00'}</p>
+              <p className="text-gray-600">Number of Assets: {portfolio.assetCount || 0}</p>
             </Link>
           ))}
         </div>

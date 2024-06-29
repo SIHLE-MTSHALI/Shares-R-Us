@@ -24,7 +24,7 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use((response) => {
   return response;
 }, (error) => {
-  if (error.response.status === 401) {
+  if (error.response && error.response.status === 401) {
     // Handle unauthorized access (e.g., redirect to login)
     localStorage.removeItem('token');
     window.location = '/login';
@@ -32,18 +32,22 @@ api.interceptors.response.use((response) => {
   return Promise.reject(error);
 });
 
-export const login = (credentials) => api.post('/auth/login', credentials);
-export const register = (userData) => api.post('/auth/register', userData);
+export const login = (credentials) => {
+  const formData = new FormData();
+  formData.append('username', credentials.username);
+  formData.append('password', credentials.password);
+  return api.post('/token', formData, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    }
+  });
+};
+
+export const register = (userData) => api.post('/register', userData);
 export const getPortfolios = () => api.get('/portfolios');
 export const getPortfolio = (id) => api.get(`/portfolios/${id}`);
 export const createPortfolio = (portfolioData) => api.post('/portfolios', portfolioData);
 export const updatePortfolio = (id, portfolioData) => api.put(`/portfolios/${id}`, portfolioData);
 export const deletePortfolio = (id) => api.delete(`/portfolios/${id}`);
-export const getAssets = () => api.get('/assets');
-export const addAssetToPortfolio = (portfolioId, assetData) => api.post(`/portfolios/${portfolioId}/assets`, assetData);
-export const removeAssetFromPortfolio = (portfolioId, assetId) => api.delete(`/portfolios/${portfolioId}/assets/${assetId}`);
-export const getWatchlist = () => api.get('/watchlist');
-export const addToWatchlist = (symbol) => api.post('/watchlist', { symbol });
-export const removeFromWatchlist = (symbol) => api.delete(`/watchlist/${symbol}`);
 
 export default api;

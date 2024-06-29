@@ -12,6 +12,7 @@ import AddAsset from './pages/AddAsset';
 import UserSettings from './pages/UserSettings';
 import Watchlist from './pages/Watchlist';
 import Notification from './components/Notification';
+import CreatePortfolio from './pages/CreatePortfolio';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -80,6 +81,7 @@ const AppContent = () => {
           <Route path="/portfolio/:portfolioId/add-asset" element={<AddAsset />} />
           <Route path="/settings" element={<UserSettings />} />
           <Route path="/watchlist" element={<Watchlist />} />
+          <Route path="/create-portfolio" element={<CreatePortfolio />} />
         </Routes>
       </Router>
       {notifications.map(notification => (

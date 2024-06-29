@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from ..models.stock import Stock
+from backend.app.models.stock import Stock
 
 def get_stock(db: Session, stock_id: int):
     return db.query(Stock).filter(Stock.id == stock_id).first()

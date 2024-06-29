@@ -1,5 +1,5 @@
 import requests
-from ..core.config import settings
+from backend.app.core.config import settings
 
 def get_crypto_data(symbol: str):
     api_key = settings.COINAPI_API_KEY

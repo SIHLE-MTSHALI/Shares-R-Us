@@ -1,5 +1,5 @@
 import requests
-from ..core.config import settings
+from backend.app.core.config import settings
 
 def get_stock_data(symbol: str):
     api_key = settings.ALPHA_VANTAGE_API_KEY

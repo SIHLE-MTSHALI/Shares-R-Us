@@ -6,12 +6,12 @@ import { login } from '../services/api';
 import Layout from '../components/Layout';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const dispatch = useDispatch();
-  const history = useNavigate();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,13 +19,21 @@ const Login = () => {
     setError('');
     dispatch(loginStart());
     try {
-      const response = await login({ email, password });
-      localStorage.setItem('token', response.data.token);
-      dispatch(loginSuccess(response.data.user));
-      history.push('/');
+      const response = await login({ username, password });
+      localStorage.setItem('token', response.data.access_token);
+      dispatch(loginSuccess({ email: username }));
+      navigate('/');
     } catch (err) {
-      setError(err.response?.data?.message || 'An error occurred during login');
-      dispatch(loginFailure(err.response?.data?.message || 'An error occurred during login'));
+      let errorMessage = 'An error occurred during login';
+      if (err.response) {
+        errorMessage = err.response.data?.detail || err.response.data || errorMessage;
+      } else if (err.request) {
+        errorMessage = 'No response received from server';
+      } else {
+        errorMessage = err.message || errorMessage;
+      }
+      setError(errorMessage);
+      dispatch(loginFailure(errorMessage));
     } finally {
       setLoading(false);
     }
@@ -37,12 +45,12 @@ const Login = () => {
         <h2 className="text-2xl font-bold mb-6">Login</h2>
         {error && <p className="text-red-500 mb-4">{error}</p>}
         <div className="mb-4">
-          <label htmlFor="email" className="block mb-2">Email</label>
+          <label htmlFor="username" className="block mb-2">Email</label>
           <input
-            id="email"
+            id="username"
             type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
             required
             className="w-full px-3 py-2 border rounded-md"
           />
