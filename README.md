@@ -37,7 +37,7 @@ Shares'R'Us is a comprehensive stock portfolio management application designed t
 
 1. **Clone the repository:**
     ```bash
-    git clone https://github.com/yourusername/shares-r-us.git
+    git clone https://github.com/SIHLE-MTSHALI/shares-r-us.git
     cd shares-r-us
     ```
 
