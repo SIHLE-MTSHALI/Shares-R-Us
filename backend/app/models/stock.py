@@ -1,7 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float, ForeignKey
 from sqlalchemy.orm import relationship
-from backend.app.db.base_class import Base
-
+from app.db.base_class import Base  # Changed from backend.app.db.base_class to app.db.base_class
 class Stock(Base):
     __tablename__ = "stocks"
 

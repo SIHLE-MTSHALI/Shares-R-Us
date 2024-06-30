@@ -1,7 +1,26 @@
 from sqlalchemy.orm import Session
+from sqlalchemy.orm import joinedload
 from backend.app.models.portfolio import Portfolio
 from backend.app.models.stock import Stock
 from backend.app.schemas.portfolio import PortfolioCreate
+import logging
+
+logger = logging.getLogger(__name__)
+
+def get_user_portfolios(db: Session, user_id: int):
+    try:
+        # Use joinedload to fetch related stocks in a single query
+        portfolios = db.query(Portfolio).options(joinedload(Portfolio.stocks)).filter(Portfolio.user_id == user_id).all()
+        
+        # Calculate total_value and asset_count for each portfolio
+        for portfolio in portfolios:
+            portfolio.total_value = sum(stock.current_value for stock in portfolio.stocks)
+            portfolio.asset_count = len(portfolio.stocks)
+        
+        return portfolios
+    except Exception as e:
+        logger.error(f"Error in get_user_portfolios: {str(e)}", exc_info=True)
+        raise
 
 def get_portfolios(db: Session, skip: int = 0, limit: int = 100):
     return db.query(Portfolio).offset(skip).limit(limit).all()

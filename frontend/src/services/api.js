@@ -49,5 +49,8 @@ export const getPortfolio = (id) => api.get(`/portfolios/${id}`);
 export const createPortfolio = (portfolioData) => api.post('/portfolios', portfolioData);
 export const updatePortfolio = (id, portfolioData) => api.put(`/portfolios/${id}`, portfolioData);
 export const deletePortfolio = (id) => api.delete(`/portfolios/${id}`);
+export const getMarketOverview = () => api.get('/market-overview');
+export const getNewsFeed = () => api.get('/news-feed');
+export const getTrendingAnalysis = () => api.get('/trending-analysis');
 
 export default api;
