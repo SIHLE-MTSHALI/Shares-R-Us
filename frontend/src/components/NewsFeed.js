@@ -31,7 +31,7 @@ const NewsFeed = () => {
 
   if (loading) return <div>Loading news...</div>;
   if (error) return <div>Error: {error}</div>;
-  if (news.length === 0) return null;
+  if (news.length === 0) return <div>No news available</div>;
 
   return (
     <div className="bg-white p-4 rounded-lg shadow-md mt-4">

@@ -49,8 +49,38 @@ export const getPortfolio = (id) => api.get(`/portfolios/${id}`);
 export const createPortfolio = (portfolioData) => api.post('/portfolios', portfolioData);
 export const updatePortfolio = (id, portfolioData) => api.put(`/portfolios/${id}`, portfolioData);
 export const deletePortfolio = (id) => api.delete(`/portfolios/${id}`);
-export const getMarketOverview = () => api.get('/market-overview');
-export const getNewsFeed = () => api.get('/news-feed');
-export const getTrendingAnalysis = () => api.get('/trending-analysis');
+
+// Updated getMarketOverview function
+export const getMarketOverview = async () => {
+  try {
+    const response = await api.get('/market-overview');
+    return Array.isArray(response.data) ? response.data : [];
+  } catch (error) {
+    console.error('Error fetching market overview:', error);
+    return [];
+  }
+};
+
+// Updated getNewsFeed function
+export const getNewsFeed = async () => {
+  try {
+    const response = await api.get('/news-feed');
+    return Array.isArray(response.data) ? response.data : [];
+  } catch (error) {
+    console.error('Error fetching news feed:', error);
+    return [];
+  }
+};
+
+// Updated getTrendingAnalysis function
+export const getTrendingAnalysis = async () => {
+  try {
+    const response = await api.get('/trending-analysis');
+    return Array.isArray(response.data) ? response.data : [];
+  } catch (error) {
+    console.error('Error fetching trending analysis:', error);
+    return [];
+  }
+};
 
 export default api;

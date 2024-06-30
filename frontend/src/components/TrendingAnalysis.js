@@ -1,19 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Changed from Link to useNavigate
+import { useNavigate } from 'react-router-dom';
 import { getTrendingAnalysis } from '../services/api';
 
 const TrendingAnalysis = () => {
   const [trendingItems, setTrendingItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const navigate = useNavigate(); // Added for navigation
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchTrendingAnalysis = async () => {
       try {
         setLoading(true);
         const data = await getTrendingAnalysis();
-        setTrendingItems(data);
+        setTrendingItems(Array.isArray(data) ? data : []);
       } catch (error) {
         setError('Failed to fetch trending analysis');
         console.error('Error fetching trending analysis:', error);
@@ -29,7 +29,6 @@ const TrendingAnalysis = () => {
     return () => clearInterval(intervalId);
   }, []);
 
-  // Added navigation function
   const handleAnalysisClick = (slug) => {
     navigate(`/analysis/${slug}`);
   };
@@ -44,7 +43,6 @@ const TrendingAnalysis = () => {
       <ul>
         {trendingItems.map((item) => (
           <li key={item.id} className="mb-2">
-            {/* Changed to button for better accessibility */}
             <button
               onClick={() => handleAnalysisClick(item.slug)}
               className="text-blue-600 hover:underline text-left"

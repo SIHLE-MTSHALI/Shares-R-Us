@@ -2,22 +2,30 @@ import React, { useEffect, useState } from 'react';
 import { getMarketOverview } from '../services/api';
 
 const MarketOverview = () => {
-  const [marketData, setMarketData] = useState(null);
+  const [marketData, setMarketData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchMarketData = async () => {
       try {
+        setLoading(true);
         const data = await getMarketOverview();
         setMarketData(data);
       } catch (error) {
+        setError('Failed to fetch market data');
         console.error('Error fetching market data:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchMarketData();
   }, []);
 
-  if (!marketData) return <div>Loading market data...</div>;
+  if (loading) return <div>Loading market data...</div>;
+  if (error) return <div>Error: {error}</div>;
+  if (marketData.length === 0) return <div>No market data available</div>;
 
   return (
     <div className="bg-white p-4 rounded-lg shadow-md">
