@@ -1,102 +1,52 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import { Provider, useSelector } from 'react-redux';
+import { Provider } from 'react-redux';
 import { store } from './redux/store';
 
 import Dashboard from './pages/Dashboard';
-import PortfolioView from './pages/PortfolioView';
-import StockView from './pages/StockView';
+import News from './pages/News';
+import Earnings from './pages/Earnings';
+import Portfolio from './pages/Portfolio';
 import Login from './pages/Login';
-import Register from './pages/Register';
-import AddAsset from './pages/AddAsset';
-import UserSettings from './pages/UserSettings';
-import Watchlist from './pages/Watchlist';
-import Notification from './components/Notification';
-import CreatePortfolio from './pages/CreatePortfolio';
-
-class ErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false, error: null, errorInfo: null };
-  }
-
-  static getDerivedStateFromError(error) {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error, errorInfo) {
-    this.setState({ error, errorInfo });
-    console.error("Uncaught error:", error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div style={{ padding: '20px', textAlign: 'center' }}>
-          <h1>Something went wrong.</h1>
-          <details style={{ whiteSpace: 'pre-wrap' }}>
-            {this.state.error && this.state.error.toString()}
-            <br />
-            {this.state.errorInfo && this.state.errorInfo.componentStack}
-          </details>
-        </div>
-      );
-    }
-
-    return this.props.children;
-  }
-}
-
-const AppContent = () => {
-  const [error, setError] = useState(null);
-  const notifications = useSelector(state => state.notifications) || [];
-
-  useEffect(() => {
-    const handleError = (event) => {
-      setError(event.error);
-    };
-    window.addEventListener('error', handleError);
-    return () => window.removeEventListener('error', handleError);
-  }, []);
-
-  if (error) {
-    return (
-      <div style={{ padding: '20px', textAlign: 'center' }}>
-        <h1>An error occurred</h1>
-        <p>{error.message}</p>
-        <p>Check the console for more details.</p>
-      </div>
-    );
-  }
-
-  return (
-    <ErrorBoundary>
-      <Router>
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/portfolio/:id" element={<PortfolioView />} />
-          <Route path="/stock/:symbol" element={<StockView />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/portfolio/:portfolioId/add-asset" element={<AddAsset />} />
-          <Route path="/settings" element={<UserSettings />} />
-          <Route path="/watchlist" element={<Watchlist />} />
-          <Route path="/create-portfolio" element={<CreatePortfolio />} />
-        </Routes>
-      </Router>
-      {notifications.map(notification => (
-        <Notification key={notification.id} message={notification.message} type={notification.type} />
-      ))}
-    </ErrorBoundary>
-  );
-};
+import Signup from './pages/Signup';
+import Profile from './pages/Profile';
+import About from './pages/About';
+import Contact from './pages/Contact';
+import Terms from './pages/Terms';
+import Privacy from './pages/Privacy';
+import Search from './pages/Search';
+import Article from './pages/Article';
+import MarketData from './pages/MarketData';
+import NewsFeed from './pages/NewsFeed';
+import Header from './components/Header';
+import Footer from './components/Footer';
 
 function App() {
   return (
     <Provider store={store}>
-      <ErrorBoundary>
-        <AppContent />
-      </ErrorBoundary>
+      <Router>
+        <Header />
+        <div className="container mx-auto p-4">
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/news" element={<News />} />
+            <Route path="/earnings" element={<Earnings />} />
+            <Route path="/portfolio" element={<Portfolio />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/search" element={<Search />} />
+            <Route path="/article/:id" element={<Article />} />
+            <Route path="/market-data/:symbol" element={<MarketData />} />
+            <Route path="/news-feed" element={<NewsFeed />} />
+          </Routes>
+        </div>
+        <Footer />
+      </Router>
     </Provider>
   );
 }

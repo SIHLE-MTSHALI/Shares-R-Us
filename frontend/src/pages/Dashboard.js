@@ -1,66 +1,57 @@
-import React, { useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { Link } from 'react-router-dom';
-import { fetchPortfoliosStart, fetchPortfoliosSuccess, fetchPortfoliosFailure } from '../redux/reducers/portfolioReducer';
-import { getPortfolios } from '../services/api';
-import Layout from '../components/Layout';
-import MarketOverview from '../components/MarketOverview';
-import NewsFeed from '../components/NewsFeed';
-import TrendingAnalysis from '../components/TrendingAnalysis';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { Line } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
+
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 const Dashboard = () => {
-  const dispatch = useDispatch();
-  const { portfolios, loading, error } = useSelector(state => state.portfolio);
+  const [portfolio, setPortfolio] = useState([]);
+  const [chartData, setChartData] = useState({});
 
   useEffect(() => {
-    const fetchPortfolios = async () => {
-      dispatch(fetchPortfoliosStart());
-      try {
-        const response = await getPortfolios();
-        dispatch(fetchPortfoliosSuccess(response.data));
-      } catch (err) {
-        dispatch(fetchPortfoliosFailure(err.response?.data?.message || 'An error occurred while fetching portfolios'));
-      }
-    };
+    axios.get('/api/v1/portfolios')
+      .then(response => {
+        const data = response.data;
+        if (!data || !Array.isArray(data)) {
+          throw new Error("No valid data received from server");
+        }
 
-    fetchPortfolios();
-  }, [dispatch]);
+        setPortfolio(data);
+        const labels = data.map(asset => asset.name);
+        const values = data.map(asset => asset.total_value);
+        setChartData({
+          labels,
+          datasets: [
+            {
+              label: 'Portfolio Value',
+              data: values,
+              borderColor: '#c07830',
+              backgroundColor: '#f5e6d6',
+            },
+          ],
+        });
+      })
+      .catch(error => console.error(error));
+  }, []);
 
-  if (loading) return <Layout><div className="text-center">Loading...</div></Layout>;
-  if (error) return <Layout><div className="text-center text-red-500">Error: {error}</div></Layout>;
+  if (!portfolio.length) return <div>Loading...</div>;
 
   return (
-    <Layout>
-      <div className="grid grid-cols-12 gap-4">
-        <div className="col-span-8">
-          <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
-          <MarketOverview />
-          <div className="mt-8">
-            <h2 className="text-2xl font-bold mb-4">Your Portfolios</h2>
-            {portfolios.length === 0 ? (
-              <p>You don't have any portfolios yet. Create one to get started!</p>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {portfolios.map(portfolio => (
-                  <Link key={portfolio.id} to={`/portfolio/${portfolio.id}`} className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-                    <h3 className="text-lg font-semibold mb-2">{portfolio.name}</h3>
-                    <p className="text-gray-600">Total Value: ${portfolio.totalValue?.toFixed(2) || '0.00'}</p>
-                    <p className="text-gray-600">Number of Assets: {portfolio.assetCount || 0}</p>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-          <Link to="/create-portfolio" className="mt-6 inline-block bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">
-            Create New Portfolio
-          </Link>
-        </div>
-        <div className="col-span-4">
-          <NewsFeed />
-          <TrendingAnalysis />
-        </div>
+    <div className="dashboard">
+      <h1 className="text-3xl mb-4">Portfolio Dashboard</h1>
+      <div className="chart-container">
+        <Line data={chartData} />
       </div>
-    </Layout>
+      <div className="portfolio-list">
+        <h2 className="text-2xl mb-2">Your Portfolio</h2>
+        <ul>
+          {portfolio.map(asset => (
+            <li key={asset.id}>{asset.name}: ${asset.total_value}</li>
+          ))}
+        </ul>
+      </div>
+    </div>
   );
 };
 
