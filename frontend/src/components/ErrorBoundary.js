@@ -1,6 +1,7 @@
-import React, { Component } from 'react';
+import React from 'react';
+import { toast } from 'react-toastify';
 
-class ErrorBoundary extends Component {
+class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
     this.state = { hasError: false };
@@ -11,15 +12,16 @@ class ErrorBoundary extends Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error("Error caught by ErrorBoundary: ", error, errorInfo);
+    console.error('Uncaught error:', error, errorInfo);
+    toast.error('An unexpected error occurred. Please try again later.');
   }
 
   render() {
     if (this.state.hasError) {
-      return <h1>Something went wrong.</h1>;
+      return <h1>Something went wrong. Please refresh the page and try again.</h1>;
     }
 
-    return this.props.children; 
+    return this.props.children;
   }
 }
 

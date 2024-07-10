@@ -1,14 +1,24 @@
 import React from 'react';
-import ReactDOM from 'react-dom/client';
+import ReactDOM from 'react-dom';
+import { Provider } from 'react-redux';
+import { BrowserRouter as Router } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import './index.css';
 import App from './App';
+import { store } from './redux/store';
 import ErrorBoundary from './components/ErrorBoundary';
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
+ReactDOM.render(
   <React.StrictMode>
-    <ErrorBoundary>
-      <App />
-    </ErrorBoundary>
-  </React.StrictMode>
+    <Provider store={store}>
+      <Router>
+        <ErrorBoundary>
+          <App />
+          <ToastContainer />
+        </ErrorBoundary>
+      </Router>
+    </Provider>
+  </React.StrictMode>,
+  document.getElementById('root')
 );

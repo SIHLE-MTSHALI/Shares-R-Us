@@ -15,6 +15,8 @@ const Portfolio = () => {
   const [currentAsset, setCurrentAsset] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [chartData, setChartData] = useState({});
+  const [timePeriod, setTimePeriod] = useState('1M');
+  const [comparisonAssets, setComparisonAssets] = useState([]);
 
   useEffect(() => {
     // Fetch portfolio data from API
@@ -108,6 +110,19 @@ const Portfolio = () => {
     asset.symbol.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleTimePeriodChange = (event) => {
+    setTimePeriod(event.target.value);
+    // Fetch and set data for the selected time period
+    // Placeholder: You can add API call here to get data for selected time period
+  };
+
+  const handleComparisonChange = (event) => {
+    const selectedSymbols = Array.from(event.target.selectedOptions, option => option.value);
+    setComparisonAssets(selectedSymbols);
+    // Fetch and set comparison data
+    // Placeholder: You can add API call here to get comparison data
+  };
+
   return (
     <div className="portfolio-container p-4">
       <header className="flex justify-between items-center mb-4">
@@ -130,6 +145,21 @@ const Portfolio = () => {
           onChange={e => setSearchTerm(e.target.value)}
           className="w-full p-2 border border-gray-300 rounded"
         />
+      </div>
+      <div className="chart-options mb-4">
+        <label>Time Period:</label>
+        <select value={timePeriod} onChange={handleTimePeriodChange} className="ml-2">
+          <option value="1W">1 Week</option>
+          <option value="1M">1 Month</option>
+          <option value="3M">3 Months</option>
+          <option value="1Y">1 Year</option>
+        </select>
+        <label className="ml-4">Compare With:</label>
+        <select multiple value={comparisonAssets} onChange={handleComparisonChange} className="ml-2">
+          {portfolio.map(asset => (
+            <option key={asset.id} value={asset.symbol}>{asset.symbol}</option>
+          ))}
+        </select>
       </div>
       <div className="chart-container mb-4">
         <Line data={chartData} />

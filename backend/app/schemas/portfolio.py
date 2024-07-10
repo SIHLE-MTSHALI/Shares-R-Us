@@ -16,7 +16,6 @@ class Portfolio(PortfolioBase):
 
     class Config:
         from_attributes = True
-        populate_by_name = True  # Add this line
 
 class PortfolioWithStocks(Portfolio):
     stocks: List['Stock'] = []

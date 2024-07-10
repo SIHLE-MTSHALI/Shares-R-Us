@@ -1,36 +1,47 @@
-/* eslint-disable import/no-anonymous-default-export */
-/* eslint-disable no-unused-vars */
-//import io from 'socket.io-client';
-//import { addNotification } from '../redux/reducers/notificationsReducer';
-//import { store } from '../redux/store';
+import io from 'socket.io-client';
 
-//const socket = io('http://localhost:8000'); // Replace with your WebSocket server URL
+const WEBSOCKET_URL = process.env.REACT_APP_WEBSOCKET_URL || 'http://localhost:8000';
 
-//socket.on('connect', () => {
-  //console.log('Connected to WebSocket server');
-//});
+class WebSocketService {
+  constructor() {
+    this.socket = null;
+    this.connect();
+  }
 
-//socket.on('priceUpdate', (data) => {
-  //store.dispatch({ type: 'UPDATE_ASSET_PRICE', payload: data });
-//});
+  connect() {
+    this.socket = io(WEBSOCKET_URL);
+    this.socket.on('connect', () => {
+      console.log('Connected to WebSocket server');
+    });
+    this.socket.on('disconnect', () => {
+      console.log('Disconnected from WebSocket server');
+    });
+  }
 
-//socket.on('notification', (data) => {
-  //store.dispatch(addNotification(data));
-//});
+  subscribeToAsset(symbol) {
+    if (this.socket) {
+      this.socket.emit('subscribe', symbol);
+    }
+  }
 
-//export const subscribeToAsset = (assetSymbol) => {
-  //socket.emit('subscribeToAsset', assetSymbol);
-//};
+  unsubscribeFromAsset(symbol) {
+    if (this.socket) {
+      this.socket.emit('unsubscribe', symbol);
+    }
+  }
 
-//export const unsubscribeFromAsset = (assetSymbol) => {
-  //socket.emit('unsubscribeFromAsset', assetSymbol);
-//};
+  onPriceUpdate(callback) {
+    if (this.socket) {
+      this.socket.on('priceUpdate', callback);
+    }
+  }
 
-//export default socket;
+  offPriceUpdate() {
+    if (this.socket) {
+      this.socket.off('priceUpdate');
+    }
+  }
+}
 
-const socket = null;
-
-export const subscribeToAsset = () => {};
-export const unsubscribeFromAsset = () => {};
-
-export default {};
+const webSocketService = new WebSocketService();
+export default webSocketService;

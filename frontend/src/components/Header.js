@@ -4,21 +4,17 @@ import { Link } from 'react-router-dom';
 const Header = () => {
   return (
     <header className="bg-primary text-white p-4 flex justify-between items-center">
-      <div className="logo">
-        <Link to="/">
-          <h1 className="text-2xl">Shares'R'Us</h1>
-        </Link>
-      </div>
+      <Link to="/" className="text-xl font-bold">Shares'R'Us</Link>
       <nav>
-        <ul className="flex space-x-4">
-          <li><Link to="/">Home</Link></li>
-          <li><Link to="/news">News</Link></li>
-          <li><Link to="/earnings">Earnings</Link></li>
-          <li><Link to="/portfolio">Portfolio</Link></li>
-        </ul>
+        <Link to="/" className="mx-2">Home</Link>
+        <Link to="/news" className="mx-2">News</Link>
+        <Link to="/earnings" className="mx-2">Earnings</Link>
+        <Link to="/portfolio" className="mx-2">Portfolio</Link>
       </nav>
-      <div className="user-account">
-        <Link to="/profile">Profile</Link>
+      <div>
+        <input type="text" placeholder="Search" className="p-1" />
+        <button className="ml-2">Search</button>
+        <Link to="/login" className="ml-4">Login</Link>
       </div>
     </header>
   );

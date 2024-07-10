@@ -35,6 +35,17 @@ const portfolioSlice = createSlice({
     deletePortfolio: (state, action) => {
       state.portfolios = state.portfolios.filter(p => p.id !== action.payload);
     },
+    updateAssetPrice: (state, action) => {
+      const { portfolioId, assetSymbol, newPrice } = action.payload;
+      const portfolio = state.portfolios.find(p => p.id === portfolioId);
+      if (portfolio) {
+        const asset = portfolio.assets.find(a => a.symbol === assetSymbol);
+        if (asset) {
+          asset.current_price = newPrice;
+          asset.total_value = asset.quantity * newPrice;
+        }
+      }
+    },
   },
 });
 
@@ -45,6 +56,7 @@ export const {
   addPortfolio,
   updatePortfolio,
   deletePortfolio,
+  updateAssetPrice,
 } = portfolioSlice.actions;
 
 export default portfolioSlice.reducer;

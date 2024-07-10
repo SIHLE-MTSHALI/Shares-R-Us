@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { getNewsFeed } from '../services/api';
+import LoadingSpinner from './LoadingSpinner';
 
-const NewsFeed = ({ limit = 5 }) => {
+const News = ({ limit = 5 }) => {
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -14,7 +15,6 @@ const NewsFeed = ({ limit = 5 }) => {
         setNews(data.slice(0, limit));
       } catch (error) {
         setError('Failed to fetch news');
-        console.error('Error fetching news:', error);
       } finally {
         setLoading(false);
       }
@@ -23,7 +23,7 @@ const NewsFeed = ({ limit = 5 }) => {
     fetchNews();
   }, [limit]);
 
-  if (loading) return <div>Loading news...</div>;
+  if (loading) return <LoadingSpinner />;
   if (error) return <div>Error: {error}</div>;
   if (news.length === 0) return <div>No news available</div>;
 
@@ -44,4 +44,4 @@ const NewsFeed = ({ limit = 5 }) => {
   );
 };
 
-export default NewsFeed;
+export default News;

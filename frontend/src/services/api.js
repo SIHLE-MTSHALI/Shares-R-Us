@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api/v1';
 
@@ -24,10 +25,28 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use((response) => {
   return response;
 }, (error) => {
-  if (error.response && error.response.status === 401) {
-    // Handle unauthorized access (e.g., redirect to login)
-    localStorage.removeItem('token');
-    window.location = '/login';
+  const { response } = error;
+  if (response) {
+    switch (response.status) {
+      case 401:
+        toast.error('Unauthorized. Please log in again.');
+        localStorage.removeItem('token');
+        window.location = '/login';
+        break;
+      case 403:
+        toast.error('You do not have permission to perform this action.');
+        break;
+      case 404:
+        toast.error('The requested resource was not found.');
+        break;
+      case 500:
+        toast.error('An internal server error occurred. Please try again later.');
+        break;
+      default:
+        toast.error('An error occurred. Please try again.');
+    }
+  } else {
+    toast.error('Network error. Please check your internet connection.');
   }
   return Promise.reject(error);
 });
@@ -43,14 +62,20 @@ export const login = (credentials) => {
   });
 };
 
+export const removeAssetFromPortfolio = (portfolioId, assetId) => api.delete(`/portfolios/${portfolioId}/stocks/${assetId}`);
 export const register = (userData) => api.post('/register', userData);
 export const getPortfolios = () => api.get('/portfolios');
 export const getPortfolio = (id) => api.get(`/portfolios/${id}`);
 export const createPortfolio = (portfolioData) => api.post('/portfolios', portfolioData);
 export const updatePortfolio = (id, portfolioData) => api.put(`/portfolios/${id}`, portfolioData);
 export const deletePortfolio = (id) => api.delete(`/portfolios/${id}`);
+export const addAssetToPortfolio = (portfolioId, assetData) => api.post(`/portfolios/${portfolioId}/stocks`, assetData);
+export const getPortfolioHistory = (portfolioId, timeRange) => api.get(`/portfolios/${portfolioId}/history?range=${timeRange}`);
+export const searchAssets = (query, filters) => api.get('/search', { params: { q: query, ...filters } });
+export const getAssetDetails = (symbol) => api.get(`/assets/${symbol}`);
+export const getUserSettings = () => api.get('/user/settings');
+export const updateUserSettings = (settings) => api.put('/user/settings', settings);
 
-// Updated getMarketOverview function
 export const getMarketOverview = async () => {
   try {
     const response = await api.get('/market-overview');
@@ -61,7 +86,6 @@ export const getMarketOverview = async () => {
   }
 };
 
-// Updated getNewsFeed function
 export const getNewsFeed = async () => {
   try {
     const response = await api.get('/news-feed');
@@ -72,7 +96,6 @@ export const getNewsFeed = async () => {
   }
 };
 
-// Updated getTrendingAnalysis function
 export const getTrendingAnalysis = async () => {
   try {
     const response = await api.get('/trending-analysis');
@@ -80,6 +103,16 @@ export const getTrendingAnalysis = async () => {
   } catch (error) {
     console.error('Error fetching trending analysis:', error);
     return [];
+  }
+};
+
+export const getEarningsEvents = async () => {
+  try {
+    const response = await api.get('/earnings-events');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching earnings events:', error);
+    throw error;
   }
 };
 

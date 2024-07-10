@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../redux/reducers/authReducer';
-import { FaUser, FaSearch, FaTwitter, FaFacebook, FaLinkedin } from 'react-icons/fa';
+import { FaUser, FaSearch, FaTwitter, FaFacebook, FaLinkedin, FaBars, FaTimes } from 'react-icons/fa';
 
 const Layout = ({ children }) => {
-  const { isAuthenticated} = useSelector(state => state.auth);
+  const { isAuthenticated } = useSelector(state => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -20,6 +21,10 @@ const Layout = ({ children }) => {
     navigate(`/search?q=${searchTerm}`);
   };
 
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <header className="bg-primary text-white p-4">
@@ -27,11 +32,18 @@ const Layout = ({ children }) => {
           <Link to="/" className="text-2xl font-bold">
             <img src="/logo.png" alt="Shares'R'Us Logo" className="h-8" />
           </Link>
-          <nav className="hidden md:flex space-x-4">
-            <Link to="/" className="hover:text-accent">Home</Link>
-            <Link to="/news" className="hover:text-accent">News</Link>
-            <Link to="/earnings" className="hover:text-accent">Earnings</Link>
-            <Link to="/portfolio" className="hover:text-accent">Portfolio</Link>
+          <div className="md:hidden">
+            <button onClick={toggleMenu} className="focus:outline-none">
+              {isMenuOpen ? <FaTimes /> : <FaBars />}
+            </button>
+          </div>
+          <nav className={`${isMenuOpen ? 'block' : 'hidden'} md:flex md:items-center w-full md:w-auto absolute md:relative top-16 md:top-0 left-0 md:left-auto bg-primary md:bg-transparent z-20`}>
+            <div className="flex flex-col md:flex-row md:space-x-4 p-4 md:p-0">
+              <Link to="/" className="hover:text-accent py-2 md:py-0">Home</Link>
+              <Link to="/news" className="hover:text-accent py-2 md:py-0">News</Link>
+              <Link to="/earnings" className="hover:text-accent py-2 md:py-0">Earnings</Link>
+              <Link to="/portfolio" className="hover:text-accent py-2 md:py-0">Portfolio</Link>
+            </div>
           </nav>
           <form onSubmit={handleSearch} className="hidden md:flex">
             <input
@@ -67,8 +79,8 @@ const Layout = ({ children }) => {
         {children}
       </main>
       <footer className="bg-primary text-white p-4">
-        <div className="container mx-auto flex justify-between items-center">
-          <div className="space-x-4">
+        <div className="container mx-auto flex flex-col md:flex-row justify-between items-center">
+          <div className="space-x-4 mb-4 md:mb-0">
             <Link to="/about" className="hover:text-accent">About</Link>
             <Link to="/contact" className="hover:text-accent">Contact</Link>
             <Link to="/terms" className="hover:text-accent">Terms of Use</Link>

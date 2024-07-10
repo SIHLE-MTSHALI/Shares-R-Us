@@ -3,7 +3,10 @@ from sqlalchemy.orm import Session
 from typing import List
 from backend.app.core.security import get_current_user
 from backend.app.schemas.portfolio import Portfolio, PortfolioCreate
-from backend.app.crud.portfolio import create_portfolio, get_user_portfolios, add_stock_to_portfolio, get_portfolio, update_portfolio_db, delete_portfolio_db
+from backend.app.crud.portfolio import (
+    create_portfolio, get_user_portfolios, add_stock_to_portfolio,
+    get_portfolio, update_portfolio_db, delete_portfolio_db
+)
 from backend.app.db.session import get_db
 from backend.app.models.user import User
 import logging
@@ -18,7 +21,7 @@ async def get_portfolios(current_user: User = Depends(get_current_user), db: Ses
         return [Portfolio(
             id=p.id,
             name=p.name,
-            description=getattr(p, 'description', None),  # Use getattr to safely get the description
+            description=getattr(p, 'description', None),
             user_id=p.user_id,
             total_value=p.total_value,
             asset_count=p.asset_count
@@ -37,14 +40,6 @@ async def create_user_portfolio(
         return create_portfolio(db, portfolio, current_user.id)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-@router.get("/portfolios", response_model=List[Portfolio])
-async def get_portfolios(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    try:
-        portfolios = get_user_portfolios(db, current_user.id)
-        return portfolios
-    except Exception as e:
-        raise HTTPException(status_code=500, detail="Error fetching portfolios")
 
 @router.get("/portfolios/{portfolio_id}", response_model=Portfolio)
 async def read_portfolio(
