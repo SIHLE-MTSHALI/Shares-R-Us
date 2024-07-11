@@ -22,7 +22,6 @@ const Earnings = () => {
         if (portfolios.length > 0) {
           symbols = portfolios.flatMap(portfolio => portfolio.assets.map(asset => asset.symbol));
         } else {
-          // If no portfolios, use 5 random symbols
           symbols = ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'FB'];
         }
 

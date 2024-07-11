@@ -73,9 +73,11 @@ const PortfolioView = () => {
         fetchChartData(data, timeRange, comparisonAsset);
 
         // Subscribe to real-time updates for each asset
-        data.assets.forEach(asset => {
-          WebSocketService.subscribeToAsset(asset.symbol);
-        });
+        if (data.assets && Array.isArray(data.assets)) {
+          data.assets.forEach(asset => {
+            WebSocketService.subscribeToAsset(asset.symbol);
+          });
+        }
 
         // Set up WebSocket listener
         WebSocketService.onPriceUpdate((update) => {
@@ -96,22 +98,18 @@ const PortfolioView = () => {
     // Cleanup function
     return () => {
       WebSocketService.offPriceUpdate();
-    };
-  }, [dispatch, id, timeRange, comparisonAsset, fetchChartData]);
-
-  // Separate useEffect for WebSocket unsubscriptions
-  useEffect(() => {
-    return () => {
-      if (portfolio) {
+      if (portfolio && portfolio.assets && Array.isArray(portfolio.assets)) {
         portfolio.assets.forEach(asset => {
           WebSocketService.unsubscribeFromAsset(asset.symbol);
         });
       }
     };
-  }, [portfolio]);
+  }, [dispatch, id, timeRange, comparisonAsset, fetchChartData]);
 
   useEffect(() => {
-    fetchChartData(portfolio, timeRange, comparisonAsset);
+    if (portfolio) {
+      fetchChartData(portfolio, timeRange, comparisonAsset);
+    }
   }, [portfolio, timeRange, comparisonAsset, fetchChartData]);
 
   const handleDeletePortfolio = () => {
@@ -260,41 +258,45 @@ const PortfolioView = () => {
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
           <h2 className="text-xl font-semibold mb-2">Portfolio Details</h2>
-          <p>Total Value: ${portfolio.total_value.toFixed(2)}</p>
-          <p>Number of Assets: {portfolio.assets.length}</p>
+          <p>Total Value: ${portfolio.total_value?.toFixed(2) || '0.00'}</p>
+          <p>Number of Assets: {portfolio.assets?.length || 0}</p>
         </div>
       </div>
       <div className="bg-white p-4 rounded-lg shadow mb-4">
         <h2 className="text-xl font-semibold mb-2">Assets</h2>
-        <table className="w-full">
-          <thead>
-            <tr>
-              <th className="text-left">Symbol</th>
-              <th className="text-left">Quantity</th>
-              <th className="text-left">Current Price</th>
-              <th className="text-left">Total Value</th>
-              <th className="text-left">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {portfolio.assets.map(asset => (
-              <tr key={asset.id}>
-                <td>{asset.symbol}</td>
-                <td>{asset.quantity}</td>
-                <td>${asset.current_price.toFixed(2)}</td>
-                <td>${asset.total_value.toFixed(2)}</td>
-                <td>
-                  <button 
-                    onClick={() => handleRemoveAsset(asset.id)}
-                    className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition-colors"
-                  >
-                    Remove
-                  </button>
-                </td>
+        {portfolio.assets && portfolio.assets.length > 0 ? (
+          <table className="w-full">
+            <thead>
+              <tr>
+                <th className="text-left">Symbol</th>
+                <th className="text-left">Quantity</th>
+                <th className="text-left">Current Price</th>
+                <th className="text-left">Total Value</th>
+                <th className="text-left">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {portfolio.assets.map(asset => (
+                <tr key={asset.id}>
+                  <td>{asset.symbol}</td>
+                  <td>{asset.quantity}</td>
+                  <td>${asset.current_price?.toFixed(2) || 'N/A'}</td>
+                  <td>${asset.total_value?.toFixed(2) || 'N/A'}</td>
+                  <td>
+                    <button 
+                      onClick={() => handleRemoveAsset(asset.id)}
+                      className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition-colors"
+                    >
+                      Remove
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p>No assets in this portfolio yet.</p>
+        )}
       </div>
       <div className="bg-white p-4 rounded-lg shadow mb-4">
         <h2 className="text-xl font-semibold mb-2">Add Asset</h2>

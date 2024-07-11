@@ -1,6 +1,6 @@
 import io from 'socket.io-client';
 
-const WEBSOCKET_URL = process.env.REACT_APP_WEBSOCKET_URL || 'http://localhost:8000';
+const WEBSOCKET_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000';
 
 class WebSocketService {
   constructor() {
@@ -9,7 +9,10 @@ class WebSocketService {
   }
 
   connect() {
-    this.socket = io(WEBSOCKET_URL);
+    this.socket = io(WEBSOCKET_URL, {
+      path: '/socket.io',
+      transports: ['websocket', 'polling'],
+    });
     this.socket.on('connect', () => {
       console.log('Connected to WebSocket server');
     });

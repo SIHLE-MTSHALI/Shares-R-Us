@@ -15,7 +15,11 @@ const portfolioSlice = createSlice({
       state.error = null;
     },
     fetchPortfoliosSuccess: (state, action) => {
-      state.portfolios = action.payload;
+      state.portfolios = Array.isArray(action.payload) ? action.payload : [action.payload];
+      state.portfolios = state.portfolios.map(portfolio => ({
+        ...portfolio,
+        headers: undefined // Remove non-serializable headers
+      }));
       state.loading = false;
       state.error = null;
     },

@@ -8,6 +8,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
 });
 
 // Request interceptor for adding the auth token
@@ -51,25 +52,62 @@ api.interceptors.response.use((response) => {
   return Promise.reject(error);
 });
 
-export const login = (credentials) => {
-  const formData = new FormData();
+export const login = async (credentials) => {
+  const formData = new URLSearchParams();
   formData.append('username', credentials.username);
   formData.append('password', credentials.password);
-  return api.post('/token', formData, {
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
+  try {
+    const response = await api.post('/token', formData.toString(), {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    });
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(error.response.data.detail || 'An error occurred during login');
+    } else if (error.request) {
+      throw new Error('No response received from the server');
+    } else {
+      throw new Error('Error setting up the request');
     }
-  });
+  }
 };
 
 export const removeAssetFromPortfolio = (portfolioId, assetId) => api.delete(`/portfolios/${portfolioId}/stocks/${assetId}`);
 export const register = (userData) => api.post('/register', userData);
-export const getPortfolios = () => api.get('/portfolios');
-export const getPortfolio = (id) => api.get(`/portfolios/${id}`);
+export const getPortfolios = async () => {
+  try {
+    const response = await api.get('/portfolios');
+    return Array.isArray(response.data) ? response.data : [response.data];
+  } catch (error) {
+    console.error('Error fetching portfolios:', error);
+    throw error;
+  }
+};
+
+export const getPortfolio = async (id) => {
+  try {
+    const response = await api.get(`/portfolios/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching portfolio:', error);
+    throw error;
+  }
+};
+
 export const createPortfolio = (portfolioData) => api.post('/portfolios', portfolioData);
 export const updatePortfolio = (id, portfolioData) => api.put(`/portfolios/${id}`, portfolioData);
 export const deletePortfolio = (id) => api.delete(`/portfolios/${id}`);
-export const addAssetToPortfolio = (portfolioId, assetData) => api.post(`/portfolios/${portfolioId}/stocks`, assetData);
+export const addAssetToPortfolio = async (portfolioId, assetData) => {
+  try {
+    const response = await api.post(`/portfolios/${portfolioId}/stocks`, assetData);
+    return response.data;
+  } catch (error) {
+    console.error('Error adding asset to portfolio:', error);
+    throw error;
+  }
+};
 export const getPortfolioHistory = (portfolioId, timeRange) => api.get(`/portfolios/${portfolioId}/history?range=${timeRange}`);
 export const searchAssets = (query, filters) => api.get('/search', { params: { q: query, ...filters } });
 export const getAssetDetails = (symbol) => api.get(`/assets/${symbol}`);
@@ -112,7 +150,8 @@ export const getEarningsEvents = async () => {
     return response.data;
   } catch (error) {
     console.error('Error fetching earnings events:', error);
-    throw error;
+    toast.error('Failed to fetch earnings events');
+    return [];
   }
 };
 

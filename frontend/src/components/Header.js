@@ -1,10 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import logo from '../logo.png'; 
 
 const Header = () => {
   return (
     <header className="bg-primary text-white p-4 flex justify-between items-center">
-      <Link to="/" className="text-xl font-bold">Shares'R'Us</Link>
+      <Link to="/" className="text-xl font-bold">
+        <img src={logo} alt="Shares'R'Us Logo" className="h-8 w-8 inline mr-2" />
+        Shares'R'Us
+      </Link>
       <nav>
         <Link to="/" className="mx-2">Home</Link>
         <Link to="/news" className="mx-2">News</Link>

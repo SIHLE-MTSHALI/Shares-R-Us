@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { register } from '../services/api';
 import Layout from '../components/Layout';
 import { validateEmail, validatePassword, validateRequired } from '../utils/validation';
@@ -31,7 +31,7 @@ const Register = () => {
     setIsLoading(true);
     try {
       await register({ email, password });
-      toast.success('Registration successful');
+      toast.success('Registration successful! Please log in.');
       navigate('/login');
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Registration failed');
@@ -88,6 +88,9 @@ const Register = () => {
           {isLoading ? 'Registering...' : 'Register'}
         </button>
       </form>
+      <p className="mt-4 text-center">
+        Already have an account? <Link to="/login" className="text-accent hover:underline">Login here</Link>
+      </p>
     </Layout>
   );
 };

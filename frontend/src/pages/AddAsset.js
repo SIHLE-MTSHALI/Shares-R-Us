@@ -4,49 +4,37 @@ import { useDispatch } from 'react-redux';
 import { updatePortfolio } from '../redux/reducers/portfolioReducer';
 import { addAssetToPortfolio } from '../services/api';
 import Layout from '../components/Layout';
-import { validateRequired, validateNumber } from '../utils/validation';
-import LoadingSpinner from '../components/LoadingSpinner';
 import { toast } from 'react-toastify';
 
 const AddAsset = () => {
   const [symbol, setSymbol] = useState('');
   const [quantity, setQuantity] = useState('');
   const [purchasePrice, setPurchasePrice] = useState('');
-  const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const { id } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const validateForm = () => {
-    const newErrors = {};
-    if (!validateRequired(symbol)) newErrors.symbol = 'Symbol is required';
-    if (!validateRequired(quantity)) newErrors.quantity = 'Quantity is required';
-    else if (!validateNumber(quantity)) newErrors.quantity = 'Quantity must be a number';
-    if (!validateRequired(purchasePrice)) newErrors.purchasePrice = 'Purchase price is required';
-    else if (!validateNumber(purchasePrice)) newErrors.purchasePrice = 'Purchase price must be a number';
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateForm()) return;
-
     setIsLoading(true);
     try {
-      const updatedPortfolio = await addAssetToPortfolio(id, { symbol, quantity: Number(quantity), purchase_price: Number(purchasePrice) });
+      const newAsset = {
+        symbol,
+        quantity: Number(quantity),
+        purchase_price: Number(purchasePrice)
+      };
+      const updatedPortfolio = await addAssetToPortfolio(id, newAsset);
       dispatch(updatePortfolio(updatedPortfolio));
       toast.success('Asset added successfully');
       navigate(`/portfolio/${id}`);
-    } catch (err) {
-      toast.error(err.response?.data?.detail || 'An error occurred while adding the asset');
+    } catch (error) {
+      console.error('Error adding asset:', error);
+      toast.error('Failed to add asset');
     } finally {
       setIsLoading(false);
     }
   };
-
-  if (isLoading) return <LoadingSpinner />;
 
   return (
     <Layout>
@@ -59,9 +47,9 @@ const AddAsset = () => {
             type="text"
             value={symbol}
             onChange={(e) => setSymbol(e.target.value)}
-            className={`w-full px-3 py-2 border rounded-md ${errors.symbol ? 'border-red-500' : ''}`}
+            className="w-full px-3 py-2 border rounded-md"
+            required
           />
-          {errors.symbol && <p className="text-red-500 mt-1">{errors.symbol}</p>}
         </div>
         <div className="mb-4">
           <label htmlFor="quantity" className="block mb-2">Quantity</label>
@@ -70,11 +58,11 @@ const AddAsset = () => {
             type="number"
             value={quantity}
             onChange={(e) => setQuantity(e.target.value)}
-            className={`w-full px-3 py-2 border rounded-md ${errors.quantity ? 'border-red-500' : ''}`}
+            className="w-full px-3 py-2 border rounded-md"
+            required
             min="0"
             step="0.000001"
           />
-          {errors.quantity && <p className="text-red-500 mt-1">{errors.quantity}</p>}
         </div>
         <div className="mb-4">
           <label htmlFor="purchasePrice" className="block mb-2">Purchase Price</label>
@@ -83,14 +71,18 @@ const AddAsset = () => {
             type="number"
             value={purchasePrice}
             onChange={(e) => setPurchasePrice(e.target.value)}
-            className={`w-full px-3 py-2 border rounded-md ${errors.purchasePrice ? 'border-red-500' : ''}`}
+            className="w-full px-3 py-2 border rounded-md"
+            required
             min="0"
             step="0.01"
           />
-          {errors.purchasePrice && <p className="text-red-500 mt-1">{errors.purchasePrice}</p>}
         </div>
-        <button type="submit" className="w-full bg-accent text-white py-2 rounded-md hover:bg-opacity-90 transition-colors">
-          Add Asset
+        <button 
+          type="submit" 
+          className="w-full bg-accent text-white py-2 rounded-md hover:bg-opacity-90 transition-colors"
+          disabled={isLoading}
+        >
+          {isLoading ? 'Adding...' : 'Add Asset'}
         </button>
       </form>
     </Layout>

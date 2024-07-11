@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { loginStart, loginSuccess, loginFailure } from '../redux/reducers/authReducer';
 import { login } from '../services/api';
@@ -34,13 +34,13 @@ const Login = () => {
     dispatch(loginStart());
     try {
       const response = await login({ username: email, password });
-      dispatch(loginSuccess(response.data));
-      localStorage.setItem('token', response.data.access_token);
+      dispatch(loginSuccess(response));
+      localStorage.setItem('token', response.access_token);
       toast.success('Logged in successfully');
       navigate('/dashboard');
     } catch (error) {
       dispatch(loginFailure(error.response?.data?.detail || 'Login failed'));
-      toast.error('Invalid email or password');
+      toast.error(error.response?.data?.detail || 'Invalid email or password');
     } finally {
       setIsLoading(false);
     }
@@ -76,6 +76,9 @@ const Login = () => {
           {isLoading ? 'Logging in...' : 'Login'}
         </button>
       </form>
+      <p className="mt-4 text-center">
+        Don't have an account? <Link to="/register" className="text-accent hover:underline">Register here</Link>
+      </p>
     </Layout>
   );
 };
