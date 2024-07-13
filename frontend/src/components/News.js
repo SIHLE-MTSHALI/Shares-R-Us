@@ -11,9 +11,10 @@ const News = ({ limit = 5 }) => {
     const fetchNews = async () => {
       try {
         setLoading(true);
-        const data = await getNewsFeed();
-        setNews(data.slice(0, limit));
+        const data = await getNewsFeed(1, limit); // Updated to use page 1 and limit
+        setNews(data);
       } catch (error) {
+        console.error('Failed to fetch news:', error);
         setError('Failed to fetch news');
       } finally {
         setLoading(false);

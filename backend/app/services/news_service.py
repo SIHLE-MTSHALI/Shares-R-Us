@@ -1,27 +1,35 @@
-import os
 import aiohttp
-from dotenv import load_dotenv
+from app.core.config import settings
+import logging
 
-load_dotenv()
+logger = logging.getLogger(__name__)
 
-NEWS_API_KEY = os.getenv("NEWS_API_KEY")
-BASE_URL = "https://newsapi.org/v2/top-headlines"
-
-async def get_news_feed():
+async def get_news_feed(page: int, page_size: int):
     async with aiohttp.ClientSession() as session:
-        params = {
-            "apiKey": NEWS_API_KEY,
-            "category": "business",
-            "language": "en",
-            "pageSize": 10
-        }
-        async with session.get(BASE_URL, params=params) as response:
-            data = await response.json()
-            return [
-                {
-                    "id": article["url"],
-                    "title": article["title"],
-                    "url": article["url"]
-                }
-                for article in data["articles"]
-            ]
+        try:
+            params = {
+                "apiKey": settings.NEWS_API_KEY,
+                "category": "business",
+                "language": "en",
+                "page": page,
+                "pageSize": page_size
+            }
+            async with session.get("https://newsapi.org/v2/top-headlines", params=params) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    return [
+                        {
+                            "id": article["url"],
+                            "title": article["title"],
+                            "description": article["description"],
+                            "url": article["url"],
+                            "publishedAt": article["publishedAt"]
+                        }
+                        for article in data["articles"]
+                    ]
+                else:
+                    logger.error(f"News API returned status {response.status}")
+                    return []
+        except Exception as e:
+            logger.error(f"Error fetching news feed: {str(e)}")
+            return []

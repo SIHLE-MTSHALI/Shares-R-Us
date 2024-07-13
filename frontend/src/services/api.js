@@ -1,3 +1,5 @@
+// File: frontend/src/services/api.js
+
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
@@ -87,6 +89,9 @@ export const getPortfolios = async () => {
 };
 
 export const getPortfolio = async (id) => {
+  if (!id) {
+    throw new Error('Portfolio ID is required');
+  }
   try {
     const response = await api.get(`/portfolios/${id}`);
     return response.data;
@@ -108,9 +113,44 @@ export const addAssetToPortfolio = async (portfolioId, assetData) => {
     throw error;
   }
 };
-export const getPortfolioHistory = (portfolioId, timeRange) => api.get(`/portfolios/${portfolioId}/history?range=${timeRange}`);
-export const searchAssets = (query, filters) => api.get('/search', { params: { q: query, ...filters } });
-export const getAssetDetails = (symbol) => api.get(`/assets/${symbol}`);
+
+export const getPortfolioHistory = async (portfolioId, range) => {
+  try {
+    const response = await api.get(`/portfolios/${portfolioId}/history`, { params: { range } });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching portfolio history:', error);
+    return []; // Return an empty array instead of throwing an error
+  }
+};
+
+export const searchAssets = async (query, filters = {}) => {
+  try {
+    const response = await api.get('/search-assets', {
+      params: {
+        query,
+        ...filters
+      }
+    });
+    return response.data;
+  } catch (error) {
+    toast.error('Error searching assets:', error);
+    console.error('Error searching assets:', error);
+    throw error;
+  }
+};
+
+export const getAssetDetails = async (symbol) => {
+  try {
+    const response = await api.get(`/assets/${symbol}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching asset details:', error);
+    toast.error('Failed to fetch asset details');
+    return null; // Return null instead of throwing an error
+  }
+};
+
 export const getUserSettings = () => api.get('/user/settings');
 export const updateUserSettings = (settings) => api.put('/user/settings', settings);
 
@@ -124,13 +164,13 @@ export const getMarketOverview = async () => {
   }
 };
 
-export const getNewsFeed = async () => {
+export const getNewsFeed = async (page = 1, pageSize = 20) => {
   try {
-    const response = await api.get('/news-feed');
-    return Array.isArray(response.data) ? response.data : [];
+    const response = await api.get(`/news-feed?page=${page}&page_size=${pageSize}`);
+    return response.data;
   } catch (error) {
     console.error('Error fetching news feed:', error);
-    return [];
+    throw error;
   }
 };
 

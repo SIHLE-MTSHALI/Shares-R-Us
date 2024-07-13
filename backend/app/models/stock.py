@@ -10,3 +10,4 @@ class Stock(Base):
     purchase_price = Column(Float)
     portfolio_id = Column(Integer, ForeignKey("portfolios.id"))
     portfolio = relationship("Portfolio", back_populates="stocks")
+    historical_values = relationship("HistoricalValue", back_populates="stock")

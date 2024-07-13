@@ -1,5 +1,6 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
+from app.services import asset_service, earnings_service
 from .api.endpoints import auth, portfolio, crypto
 from .core.config import settings
 from .services import market_service, news_service, trending_service
@@ -8,6 +9,14 @@ import logging
 import socketio
 import random
 from starlette.websockets import WebSocket
+from app.services import asset_service
+from sqlalchemy.orm import Session
+from app.crud import crud_portfolio
+from app.db.session import get_db
+from app.tasks.update_historical_values import start_scheduler
+from app.schemas import portfolio as portfolio_schema
+from app.dependencies.auth import get_current_user
+from app.models.user import User
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -40,11 +49,26 @@ async def get_market_overview():
     except Exception as e:
         logger.error(f"Error in get_market_overview: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+    
+@app.get("/api/v1/portfolios/{portfolio_id}/history")
+async def get_portfolio_history(portfolio_id: int, range: str, db: Session = Depends(get_db)):
+    try:
+        history = await crud_portfolio.get_portfolio_history(db, portfolio_id, range)
+        return history
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+@app.get("/api/v1/search-assets")
+async def search_assets(query: str):
+    try:
+        return await asset_service.search_assets(query)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/v1/news-feed")
-async def get_news_feed():
+async def get_news_feed(page: int = 1, page_size: int = 10):
     try:
-        return await news_service.get_news_feed()
+        return await news_service.get_news_feed(page, page_size)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -87,6 +111,7 @@ async def emit_price_updates():
 async def startup_event():
     asyncio.create_task(emit_price_updates())
 
+
 # Set up a background task to periodically update trending analyses
 @app.on_event("startup")
 async def start_periodic_update():
@@ -96,6 +121,10 @@ async def start_periodic_update():
             await asyncio.sleep(300)  # Update every 5 minutes
 
     asyncio.create_task(periodic_update())
+
+@app.on_event("startup")
+def on_startup():
+    start_scheduler()
 
 # WebSocket route
 @app.websocket("/ws")
@@ -111,6 +140,84 @@ async def websocket_endpoint(websocket: WebSocket):
         print(f"WebSocket error: {e}")
     finally:
         sio.leave_room(sid, 'global')
+
+@app.get("/api/v1/assets/{symbol}")
+async def get_asset_details(symbol: str):
+    try:
+        return await asset_service.get_asset_details(symbol)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/v1/portfolios/{portfolio_id}", response_model=portfolio_schema.Portfolio)
+def read_portfolio(portfolio_id: int, db: Session = Depends(get_db)):
+    try:
+        portfolio = crud_portfolio.get_portfolio(db, portfolio_id)
+        if portfolio is None:
+            raise HTTPException(status_code=404, detail="Portfolio not found")
+        return portfolio
+    except Exception as e:
+        logger.error(f"Error reading portfolio: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.put("/api/v1/portfolios/{portfolio_id}", response_model=portfolio_schema.Portfolio)
+def update_portfolio(portfolio_id: int, portfolio: portfolio_schema.PortfolioUpdate, db: Session = Depends(get_db)):
+    try:
+        updated_portfolio = crud_portfolio.update_portfolio(db, portfolio_id, portfolio.dict())
+        if updated_portfolio is None:
+            raise HTTPException(status_code=404, detail="Portfolio not found")
+        return updated_portfolio
+    except Exception as e:
+        logger.error(f"Error updating portfolio: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.delete("/api/v1/portfolios/{portfolio_id}", response_model=bool)
+def delete_portfolio(portfolio_id: int, db: Session = Depends(get_db)):
+    try:
+        result = crud_portfolio.delete_portfolio(db, portfolio_id)
+        if not result:
+            raise HTTPException(status_code=404, detail="Portfolio not found")
+        return result
+    except Exception as e:
+        logger.error(f"Error deleting portfolio: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.get("/api/v1/portfolios/{portfolio_id}/history")
+def get_portfolio_history(portfolio_id: int, range: str, db: Session = Depends(get_db)):
+    try:
+        return crud_portfolio.get_portfolio_history(db, portfolio_id, range)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error getting portfolio history: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.get("/api/v1/earnings-events")
+async def get_earnings_events(horizon: str = "3month"):
+    try:
+        return await earnings_service.get_earnings_events(horizon)
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        logger.error(f"Error getting earnings events: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.get("/api/v1/company-earnings/{symbol}")
+async def get_company_earnings(symbol: str):
+    try:
+        return await earnings_service.get_company_earnings(symbol)
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/v1/earnings-surprises/{symbol}")
+async def get_earnings_surprises(symbol: str):
+    try:
+        return await earnings_service.get_earnings_surprises(symbol)
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # Mount Socket.IO app
 app.mount("/socket.io", socketio.ASGIApp(sio))

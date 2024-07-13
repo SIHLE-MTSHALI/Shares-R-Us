@@ -1,12 +1,32 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional
 
+class StockBase(BaseModel):
+    symbol: str
+    quantity: float
+    current_price: float
+
+class StockCreate(StockBase):
+    purchase_price: float
+
+class Stock(StockBase):
+    id: int
+    portfolio_id: int
+    purchase_price: float
+    current_value: float = 0.0
+
+    class Config:
+        from_attributes = True
+
 class PortfolioBase(BaseModel):
     name: str
-    description: Optional[str] = None  # Make description optional with a default of None
+    description: Optional[str] = None
 
 class PortfolioCreate(PortfolioBase):
-    pass
+    stocks: Optional[List[StockCreate]] = []
+
+class PortfolioUpdate(PortfolioBase):
+    stocks: Optional[List[StockCreate]] = []
 
 class Portfolio(PortfolioBase):
     id: int
@@ -18,14 +38,7 @@ class Portfolio(PortfolioBase):
         from_attributes = True
 
 class PortfolioWithStocks(Portfolio):
-    stocks: List['Stock'] = []
-
-class Stock(BaseModel):
-    id: int
-    symbol: str
-    quantity: int
-    purchase_price: float
-    current_value: float = 0.0
+    stocks: List[Stock] = []
 
     class Config:
         from_attributes = True

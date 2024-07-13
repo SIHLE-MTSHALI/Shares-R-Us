@@ -12,12 +12,21 @@ class WebSocketService {
     this.socket = io(WEBSOCKET_URL, {
       path: '/socket.io',
       transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
     });
+
     this.socket.on('connect', () => {
       console.log('Connected to WebSocket server');
     });
+
     this.socket.on('disconnect', () => {
       console.log('Disconnected from WebSocket server');
+    });
+
+    this.socket.on('connect_error', (error) => {
+      console.error('WebSocket connection error:', error);
     });
   }
 

@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux'; // Removed useDispatch as it's no longer needed
 import Layout from '../components/Layout';
-import { updateUserSettings } from '../redux/reducers/userReducer';
 import { getUserSettings, updateUserSettings as updateUserSettingsAPI } from '../services/api';
+import { FormattedMessage } from 'react-intl';
+import { toast } from 'react-toastify';
 
 const UserSettings = () => {
-  const dispatch = useDispatch();
+  // Removed const dispatch = useDispatch();
+  const { user } = useSelector(state => state.auth);
   const [settings, setSettings] = useState({
-    email: '',
-    defaultCurrency: 'USD',
+    email: user?.email || '',
+    defaultCurrency: 'ZAR',
     theme: 'light',
-    notificationsEnabled: true
+    notificationsEnabled: true,
+    language: 'en-ZA',
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -20,9 +23,10 @@ const UserSettings = () => {
       try {
         setLoading(true);
         const data = await getUserSettings();
-        setSettings(data);
+        setSettings(prevSettings => ({ ...prevSettings, ...data }));
       } catch (err) {
         setError('Failed to fetch user settings');
+        toast.error('Failed to fetch user settings');
       } finally {
         setLoading(false);
       }
@@ -43,22 +47,23 @@ const UserSettings = () => {
     e.preventDefault();
     try {
       await updateUserSettingsAPI(settings);
-      dispatch(updateUserSettings(settings));
-      alert('Settings updated successfully');
+      // Note: We're not dispatching any action here as we're not using Redux for user settings
+      toast.success('Settings updated successfully');
     } catch (err) {
       setError('Failed to update settings');
+      toast.error('Failed to update settings');
     }
   };
 
-  if (loading) return <Layout><div>Loading...</div></Layout>;
-  if (error) return <Layout><div>Error: {error}</div></Layout>;
-
+  if (loading) return <Layout><div><FormattedMessage id="loading" /></div></Layout>;
+  if (error) return <Layout><div><FormattedMessage id="error" values={{ error }} /></div></Layout>;
+  
   return (
     <Layout>
-      <h1 className="text-3xl font-bold mb-4">User Settings</h1>
+      <h1 className="text-3xl font-bold mb-4"><FormattedMessage id="userSettings.title" /></h1>
       <form onSubmit={handleSubmit} className="bg-white p-4 rounded-lg shadow">
         <div className="mb-4">
-          <label htmlFor="email" className="block mb-2">Email</label>
+          <label htmlFor="email" className="block mb-2"><FormattedMessage id="userSettings.email" /></label>
           <input
             type="email"
             id="email"
@@ -66,10 +71,11 @@ const UserSettings = () => {
             value={settings.email}
             onChange={handleChange}
             className="w-full px-3 py-2 border rounded-md"
+            disabled // Email field is now disabled
           />
         </div>
         <div className="mb-4">
-          <label htmlFor="defaultCurrency" className="block mb-2">Default Currency</label>
+          <label htmlFor="defaultCurrency" className="block mb-2"><FormattedMessage id="userSettings.currency" /></label>
           <select
             id="defaultCurrency"
             name="defaultCurrency"
@@ -77,13 +83,14 @@ const UserSettings = () => {
             onChange={handleChange}
             className="w-full px-3 py-2 border rounded-md"
           >
+            <option value="ZAR">ZAR</option> {/* Added ZAR option */}
             <option value="USD">USD</option>
             <option value="EUR">EUR</option>
             <option value="GBP">GBP</option>
           </select>
         </div>
         <div className="mb-4">
-          <label htmlFor="theme" className="block mb-2">Theme</label>
+          <label htmlFor="theme" className="block mb-2"><FormattedMessage id="userSettings.theme" /></label>
           <select
             id="theme"
             name="theme"
@@ -91,8 +98,21 @@ const UserSettings = () => {
             onChange={handleChange}
             className="w-full px-3 py-2 border rounded-md"
           >
-            <option value="light">Light</option>
-            <option value="dark">Dark</option>
+            <option value="light"><FormattedMessage id="userSettings.theme.light" /></option>
+            <option value="dark"><FormattedMessage id="userSettings.theme.dark" /></option>
+          </select>
+        </div>
+        <div className="mb-4">
+          <label htmlFor="language" className="block mb-2"><FormattedMessage id="userSettings.language" /></label>
+          <select
+            id="language"
+            name="language"
+            value={settings.language}
+            onChange={handleChange}
+            className="w-full px-3 py-2 border rounded-md"
+          >
+            <option value="en-ZA">English (South Africa)</option>
+            <option value="en-US">English (United States)</option>
           </select>
         </div>
         <div className="mb-4">
@@ -104,11 +124,11 @@ const UserSettings = () => {
               onChange={handleChange}
               className="mr-2"
             />
-            Enable Notifications
+            <FormattedMessage id="userSettings.notifications" />
           </label>
         </div>
         <button type="submit" className="bg-accent text-white px-4 py-2 rounded hover:bg-opacity-90 transition-colors">
-          Save Settings
+          <FormattedMessage id="userSettings.save" />
         </button>
       </form>
     </Layout>
