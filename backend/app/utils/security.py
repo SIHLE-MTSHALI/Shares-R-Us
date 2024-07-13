@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
-from backend.app.core.config import settings
+from app.core.config import settings
 
 def create_reset_token(data: dict, expires_delta: timedelta = timedelta(hours=1)):
     to_encode = data.copy()

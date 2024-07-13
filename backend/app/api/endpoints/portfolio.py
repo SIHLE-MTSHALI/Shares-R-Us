@@ -1,14 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
-from backend.app.core.security import get_current_user
-from backend.app.schemas.portfolio import Portfolio, PortfolioCreate
-from backend.app.crud.portfolio import (
+from app.core.security import get_current_user
+from app.schemas.portfolio import Portfolio, PortfolioCreate
+from app.crud.portfolio import (
     create_portfolio, get_user_portfolios, add_stock_to_portfolio,
     get_portfolio, update_portfolio_db, delete_portfolio_db
 )
-from backend.app.db.session import get_db
-from backend.app.models.user import User
+from app.db.session import get_db
+from app.models.user import User
 import logging
 
 router = APIRouter()

@@ -1,5 +1,3 @@
-// File: frontend/src/services/api.js
-
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
@@ -76,8 +74,8 @@ export const login = async (credentials) => {
   }
 };
 
-export const removeAssetFromPortfolio = (portfolioId, assetId) => api.delete(`/portfolios/${portfolioId}/stocks/${assetId}`);
 export const register = (userData) => api.post('/register', userData);
+
 export const getPortfolios = async () => {
   try {
     const response = await api.get('/portfolios');
@@ -102,14 +100,27 @@ export const getPortfolio = async (id) => {
 };
 
 export const createPortfolio = (portfolioData) => api.post('/portfolios', portfolioData);
+
 export const updatePortfolio = (id, portfolioData) => api.put(`/portfolios/${id}`, portfolioData);
+
 export const deletePortfolio = (id) => api.delete(`/portfolios/${id}`);
+
 export const addAssetToPortfolio = async (portfolioId, assetData) => {
   try {
-    const response = await api.post(`/portfolios/${portfolioId}/stocks`, assetData);
+    const response = await api.post(`/portfolios/${portfolioId}/assets`, assetData);
     return response.data;
   } catch (error) {
     console.error('Error adding asset to portfolio:', error);
+    throw error;
+  }
+};
+
+export const removeAssetFromPortfolio = async (portfolioId, assetId) => {
+  try {
+    const response = await api.delete(`/portfolios/${portfolioId}/assets/${assetId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error removing asset from portfolio:', error);
     throw error;
   }
 };

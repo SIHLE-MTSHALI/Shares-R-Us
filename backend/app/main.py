@@ -1,5 +1,6 @@
 from fastapi import Depends, FastAPI, HTTPException, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
+from app.schemas.user import User
 from app.services import asset_service, earnings_service
 from .api.endpoints import auth, portfolio, crypto
 from .core.config import settings
@@ -16,7 +17,7 @@ from app.db.session import get_db
 from app.tasks.update_historical_values import start_scheduler
 from app.schemas import portfolio as portfolio_schema
 from app.dependencies.auth import get_current_user
-from app.db.base import Base  # noqa: F401
+from app.db.base import Base  # Import this to register all models
 from app.db.init_db import init_db
 
 app = FastAPI()
@@ -226,6 +227,30 @@ async def get_earnings_surprises(symbol: str):
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/portfolios/{portfolio_id}/assets", response_model=portfolio_schema.Stock)
+async def add_asset_to_portfolio(
+    portfolio_id: int,
+    asset: portfolio_schema.StockCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    try:
+        return await crud_portfolio.add_asset_to_portfolio(db, portfolio_id, asset, current_user.id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.delete("/api/v1/portfolios/{portfolio_id}/assets/{asset_id}", response_model=bool)
+async def remove_asset_from_portfolio(
+    portfolio_id: int,
+    asset_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    try:
+        return await crud_portfolio.remove_asset_from_portfolio(db, portfolio_id, asset_id, current_user.id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 # Mount Socket.IO app
 app.mount("/socket.io", socketio.ASGIApp(sio))

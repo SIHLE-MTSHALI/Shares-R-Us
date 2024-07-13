@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchPortfoliosStart, fetchPortfoliosSuccess, fetchPortfoliosFailure, updateAssetPrice, deletePortfolio } from '../redux/reducers/portfolioReducer';
-import { getPortfolio, getPortfolioHistory, deletePortfolio as deletePortfolioAPI, addAssetToPortfolio, removeAssetFromPortfolio, updatePortfolio } from '../services/api';
+import { fetchPortfoliosStart, fetchPortfoliosSuccess, fetchPortfoliosFailure, updatePortfolio, deletePortfolio } from '../redux/reducers/portfolioReducer';
+import { getPortfolio, getPortfolioHistory, deletePortfolio as deletePortfolioAPI, addAssetToPortfolio, removeAssetFromPortfolio, updatePortfolio as updatePortfolioAPI } from '../services/api';
 import WebSocketService from '../services/websocket';
 import Layout from '../components/Layout';
 import { Line } from 'react-chartjs-2';
@@ -29,7 +29,6 @@ const PortfolioView = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedPortfolio, setEditedPortfolio] = useState({ name: '', description: '' });
 
-  // Wrap fetchChartData in useCallback to memoize it
   const fetchChartData = useCallback(async (portfolioData, range, comparison) => {
     if (!portfolioData) return;
     try {
@@ -94,10 +93,15 @@ const PortfolioView = () => {
         }
 
         WebSocketService.onPriceUpdate((update) => {
-          dispatch(updateAssetPrice({
-            portfolioId: id,
-            assetSymbol: update.symbol,
-            newPrice: update.price
+          dispatch(updatePortfolio({
+            id: id,
+            changes: {
+              assets: portfolio.assets.map(asset => 
+                asset.symbol === update.symbol 
+                  ? { ...asset, current_price: update.price, total_value: asset.quantity * update.price }
+                  : asset
+              )
+            }
           }));
         });
       } catch (error) {
@@ -196,7 +200,7 @@ const PortfolioView = () => {
 
   const handleSavePortfolio = async () => {
     try {
-      const updatedPortfolio = await updatePortfolio(id, editedPortfolio);
+      const updatedPortfolio = await updatePortfolioAPI(id, editedPortfolio);
       setPortfolio(updatedPortfolio);
       setIsEditing(false);
       toast.success('Portfolio updated successfully');

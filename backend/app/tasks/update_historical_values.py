@@ -1,7 +1,6 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from app.db.session import SessionLocal
-from app.models.stock import Stock
-from app.models.historical_value import HistoricalValue
+from app.models import User, Portfolio, Stock, HistoricalValue
 from datetime import datetime
 import aiohttp
 import asyncio

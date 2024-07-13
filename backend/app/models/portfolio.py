@@ -4,14 +4,14 @@ from app.db.base_class import Base
 
 class Portfolio(Base):
     __tablename__ = "portfolios"
-    __table_args__ = {'extend_existing': True}
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
     description = Column(String, nullable=True)
     user_id = Column(Integer, ForeignKey("users.id"))
-    user = relationship("app.models.user.User", back_populates="portfolios")
-    stocks = relationship("app.models.stock.Stock", back_populates="portfolio")
+
+    user = relationship("User", back_populates="portfolios")
+    stocks = relationship("Stock", back_populates="portfolio")
 
     @property
     def total_value(self):

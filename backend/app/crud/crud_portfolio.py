@@ -1,8 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func, and_
-from app.models.portfolio import Portfolio
-from app.models.stock import Stock
-from app.models.historical_value import HistoricalValue
+from app.models import User, Portfolio, Stock, HistoricalValue
+from app.schemas import portfolio as portfolio_schema
 from datetime import datetime, timedelta
 from typing import List, Dict, Any
 
@@ -97,6 +96,30 @@ def update_stock_price(db: Session, stock_id: int, new_price: float) -> Stock:
         db.commit()
         db.refresh(db_stock)
     return db_stock
+
+async def add_asset_to_portfolio(db: Session, portfolio_id: int, asset: portfolio_schema.StockCreate, user_id: int) -> Stock:
+    portfolio = get_portfolio(db, portfolio_id)
+    if not portfolio or portfolio.user_id != user_id:
+        raise ValueError("Portfolio not found or you don't have permission to modify it")
+    
+    db_asset = Stock(**asset.dict(), portfolio_id=portfolio_id)
+    db.add(db_asset)
+    db.commit()
+    db.refresh(db_asset)
+    return db_asset
+
+async def remove_asset_from_portfolio(db: Session, portfolio_id: int, asset_id: int, user_id: int) -> bool:
+    portfolio = get_portfolio(db, portfolio_id)
+    if not portfolio or portfolio.user_id != user_id:
+        raise ValueError("Portfolio not found or you don't have permission to modify it")
+    
+    asset = db.query(Stock).filter(Stock.id == asset_id, Stock.portfolio_id == portfolio_id).first()
+    if not asset:
+        raise ValueError("Asset not found in the specified portfolio")
+    
+    db.delete(asset)
+    db.commit()
+    return True
 
 def get_portfolio_performance(db: Session, portfolio_id: int, timeframe: str) -> Dict[str, Any]:
     portfolio = get_portfolio(db, portfolio_id)

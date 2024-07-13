@@ -1,8 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.orm import joinedload
-from backend.app.models.portfolio import Portfolio
-from backend.app.models.stock import Stock
-from backend.app.schemas.portfolio import PortfolioCreate
+from app.models import User, Portfolio, Stock, HistoricalValue
+from app.schemas.portfolio import PortfolioCreate
 import logging
 
 logger = logging.getLogger(__name__)
