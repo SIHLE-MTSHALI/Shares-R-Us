@@ -1,3 +1,11 @@
-from sqlalchemy.ext.declarative import declarative_base
+from typing import Any
+from sqlalchemy.ext.declarative import declarative_base, declared_attr
 
-Base = declarative_base()
+class CustomBase:
+    @declared_attr
+    def __tablename__(cls) -> str:
+        return cls.__name__.lower()
+
+    id: Any
+
+Base = declarative_base(cls=CustomBase)

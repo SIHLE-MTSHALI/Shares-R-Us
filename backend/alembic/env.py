@@ -25,6 +25,7 @@ if config.config_file_name is not None:
 # add your model's MetaData object here
 # for 'autogenerate' support
 from app.db.base_class import Base
+from app.db.base import Base
 from app.models import user, portfolio, stock  # Import all models here
 
 target_metadata = Base.metadata

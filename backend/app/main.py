@@ -16,12 +16,20 @@ from app.db.session import get_db
 from app.tasks.update_historical_values import start_scheduler
 from app.schemas import portfolio as portfolio_schema
 from app.dependencies.auth import get_current_user
-from app.models.user import User
+from app.db.base import Base  # noqa: F401
+from app.db.init_db import init_db
+
+app = FastAPI()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI()
+@app.on_event("startup")
+def on_startup():
+    init_db(next(get_db()))
+
+# Create tables
+# Base.metadata.create_all(bind=engine)
 
 # Socket.IO setup
 sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins='*')
