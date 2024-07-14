@@ -1,31 +1,37 @@
 import React, { useEffect, useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import Layout from '../components/Layout';
 import Stock from '../components/Stock';
 import SearchFilter from '../components/SearchFilter';
-import axios from 'axios';
+import { getWatchlist, addToWatchlist, removeFromWatchlist } from '../services/api';
+import { toast } from 'react-toastify';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const Watchlist = () => {
   const dispatch = useDispatch();
-  const watchlist = useSelector(state => state.watchlist);
+  const [watchlist, setWatchlist] = useState([]);
   const [filteredWatchlist, setFilteredWatchlist] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchWatchlist = async () => {
       try {
-        const response = await axios.get('/api/v1/watchlist');
-        dispatch({ type: 'SET_WATCHLIST', payload: response.data });
+        setLoading(true);
+        const response = await getWatchlist();
+        setWatchlist(response);
+        setFilteredWatchlist(response);
       } catch (error) {
         console.error('Error fetching watchlist:', error);
+        setError('Failed to fetch watchlist');
+        toast.error('Failed to fetch watchlist');
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchWatchlist();
   }, [dispatch]);
-
-  useEffect(() => {
-    setFilteredWatchlist(watchlist);
-  }, [watchlist]);
 
   const handleSearch = (searchTerm) => {
     const filtered = watchlist.filter(item => 
@@ -50,6 +56,35 @@ const Watchlist = () => {
     setFilteredWatchlist(filtered);
   };
 
+  const handleAddToWatchlist = async (symbol) => {
+    try {
+      await addToWatchlist(symbol);
+      toast.success(`${symbol} added to watchlist`);
+      // Refresh watchlist
+      const response = await getWatchlist();
+      setWatchlist(response);
+      setFilteredWatchlist(response);
+    } catch (error) {
+      toast.error(`Failed to add ${symbol} to watchlist`);
+    }
+  };
+
+  const handleRemoveFromWatchlist = async (symbol) => {
+    try {
+      await removeFromWatchlist(symbol);
+      toast.success(`${symbol} removed from watchlist`);
+      // Refresh watchlist
+      const response = await getWatchlist();
+      setWatchlist(response);
+      setFilteredWatchlist(response);
+    } catch (error) {
+      toast.error(`Failed to remove ${symbol} from watchlist`);
+    }
+  };
+
+  if (loading) return <Layout><LoadingSpinner /></Layout>;
+  if (error) return <Layout><div>Error: {error}</div></Layout>;
+
   return (
     <Layout>
       <h2 className="text-2xl font-bold mb-6">Watchlist</h2>
@@ -62,6 +97,8 @@ const Watchlist = () => {
             name={item.name}
             price={item.price}
             change={item.change}
+            onRemove={() => handleRemoveFromWatchlist(item.symbol)}
+            onAdd={() => handleAddToWatchlist(item.symbol)}
           />
         ))}
       </div>

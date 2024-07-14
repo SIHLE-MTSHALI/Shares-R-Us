@@ -1,3 +1,4 @@
+// File: frontend/src/pages/Dashboard.js
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchPortfoliosStart, fetchPortfoliosSuccess, fetchPortfoliosFailure } from '../redux/reducers/portfolioReducer';

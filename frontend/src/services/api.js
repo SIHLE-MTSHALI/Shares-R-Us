@@ -38,7 +38,7 @@ api.interceptors.response.use((response) => {
         toast.error('You do not have permission to perform this action.');
         break;
       case 404:
-        toast.error('The requested resource was not found.');
+        console.warn('Resource not found:', response.config.url);
         break;
       case 500:
         toast.error('An internal server error occurred. Please try again later.');
@@ -130,6 +130,10 @@ export const getPortfolioHistory = async (portfolioId, range) => {
     const response = await api.get(`/portfolios/${portfolioId}/history`, { params: { range } });
     return response.data;
   } catch (error) {
+    if (error.response && error.response.status === 404) {
+      console.warn('Portfolio history not available:', error);
+      return [];
+    }
     console.error('Error fetching portfolio history:', error);
     return []; // Return an empty array instead of throwing an error
   }
@@ -192,6 +196,36 @@ export const getTrendingAnalysis = async () => {
   } catch (error) {
     console.error('Error fetching trending analysis:', error);
     return [];
+  }
+};
+
+export const getWatchlist = async () => {
+  try {
+    const response = await api.get('/watchlist');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching watchlist:', error);
+    throw error;
+  }
+};
+
+export const addToWatchlist = async (symbol) => {
+  try {
+    const response = await api.post('/watchlist', { symbol });
+    return response.data;
+  } catch (error) {
+    console.error('Error adding to watchlist:', error);
+    throw error;
+  }
+};
+
+export const removeFromWatchlist = async (symbol) => {
+  try {
+    const response = await api.delete(`/watchlist/${symbol}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error removing from watchlist:', error);
+    throw error;
   }
 };
 

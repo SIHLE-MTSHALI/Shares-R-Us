@@ -1,12 +1,12 @@
+// File: frontend/src/pages/UserSettings.js
 import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux'; // Removed useDispatch as it's no longer needed
+import { useSelector } from 'react-redux';
 import Layout from '../components/Layout';
 import { getUserSettings, updateUserSettings as updateUserSettingsAPI } from '../services/api';
 import { FormattedMessage } from 'react-intl';
 import { toast } from 'react-toastify';
 
 const UserSettings = () => {
-  // Removed const dispatch = useDispatch();
   const { user } = useSelector(state => state.auth);
   const [settings, setSettings] = useState({
     email: user?.email || '',
@@ -47,7 +47,6 @@ const UserSettings = () => {
     e.preventDefault();
     try {
       await updateUserSettingsAPI(settings);
-      // Note: We're not dispatching any action here as we're not using Redux for user settings
       toast.success('Settings updated successfully');
     } catch (err) {
       setError('Failed to update settings');
@@ -71,7 +70,7 @@ const UserSettings = () => {
             value={settings.email}
             onChange={handleChange}
             className="w-full px-3 py-2 border rounded-md"
-            disabled // Email field is now disabled
+            disabled
           />
         </div>
         <div className="mb-4">
@@ -83,7 +82,7 @@ const UserSettings = () => {
             onChange={handleChange}
             className="w-full px-3 py-2 border rounded-md"
           >
-            <option value="ZAR">ZAR</option> {/* Added ZAR option */}
+            <option value="ZAR">ZAR</option>
             <option value="USD">USD</option>
             <option value="EUR">EUR</option>
             <option value="GBP">GBP</option>

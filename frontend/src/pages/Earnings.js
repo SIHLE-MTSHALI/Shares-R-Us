@@ -26,6 +26,7 @@ const Earnings = () => {
         }));
         setEvents(formattedEvents);
       } catch (error) {
+        console.error('Error fetching earnings events:', error);
         toast.error('Failed to fetch earnings events');
       } finally {
         setIsLoading(false);

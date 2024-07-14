@@ -1,3 +1,4 @@
+// File: frontend/src/App.js
 import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { IntlProvider } from 'react-intl';
@@ -23,17 +24,16 @@ import CreatePortfolio from './pages/CreatePortfolio';
 import AddAsset from './pages/AddAsset';
 import UserSettings from './pages/UserSettings';
 import AssetDetails from './pages/AssetDetails';
+import Watchlist from './pages/Watchlist';
 
 const messages = {
   'en-ZA': enZA,
 };
 
 function App() {
-  // Use useSelector to get the locale from the Redux store
   const { locale } = useSelector(state => state.settings);
 
   return (
-    // Wrap the entire app with IntlProvider
     <IntlProvider messages={messages[locale]} locale={locale} defaultLocale="en-ZA">
       <div className="flex flex-col min-h-screen">
         <div className="flex-grow">
@@ -59,6 +59,7 @@ function App() {
             <Route path="/news-feed" element={<NewsFeed />} />
             <Route path="/user-settings" element={<UserSettings />} />
             <Route path="/asset/:symbol" element={<AssetDetails />} />
+            <Route path="/watchlist" element={<Watchlist />} />
           </Routes>
         </div>
       </div>

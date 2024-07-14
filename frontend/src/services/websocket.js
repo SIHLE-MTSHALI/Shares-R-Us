@@ -1,3 +1,5 @@
+// File: frontend/src/services/websocket.js
+
 import io from 'socket.io-client';
 
 const WEBSOCKET_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000';
@@ -56,4 +58,8 @@ class WebSocketService {
 }
 
 const webSocketService = new WebSocketService();
+
+export const subscribeToAsset = (symbol) => webSocketService.subscribeToAsset(symbol);
+export const unsubscribeFromAsset = (symbol) => webSocketService.unsubscribeFromAsset(symbol);
+
 export default webSocketService;

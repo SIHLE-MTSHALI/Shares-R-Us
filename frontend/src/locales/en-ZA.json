@@ -9,6 +9,7 @@
   "nav.logout": "Logout",
   "nav.settings": "Settings",
   "nav.welcome": "Welcome, {email}",
+   "nav.watchlist": "Watchlist",
   "dashboard.title": "Dashboard",
   "portfolio.title": "Portfolio",
   "news.title": "Latest News",

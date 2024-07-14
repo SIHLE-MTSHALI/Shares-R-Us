@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchPortfoliosStart, fetchPortfoliosSuccess, fetchPortfoliosFailure, updatePortfolio, deletePortfolio } from '../redux/reducers/portfolioReducer';
+import { fetchPortfoliosStart, fetchPortfoliosSuccess, fetchPortfoliosFailure, deletePortfolio } from '../redux/reducers/portfolioReducer';
 import { getPortfolio, getPortfolioHistory, deletePortfolio as deletePortfolioAPI, addAssetToPortfolio, removeAssetFromPortfolio, updatePortfolio as updatePortfolioAPI } from '../services/api';
 import WebSocketService from '../services/websocket';
 import Layout from '../components/Layout';
@@ -10,6 +10,7 @@ import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement
 import { confirmAlert } from 'react-confirm-alert';
 import 'react-confirm-alert/src/react-confirm-alert.css';
 import { toast } from 'react-toastify';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
@@ -67,7 +68,7 @@ const PortfolioView = () => {
       setChartData({ labels, datasets });
     } catch (error) {
       console.error('Error fetching chart data:', error);
-      toast.error('Failed to fetch chart data');
+      toast.error('Failed to fetch portfolio history');
       setChartData({ labels: [], datasets: [] });
     }
   }, []);
@@ -84,25 +85,25 @@ const PortfolioView = () => {
         const data = await getPortfolio(id);
         dispatch(fetchPortfoliosSuccess([data]));
         setPortfolio(data);
-        fetchChartData(data, timeRange, comparisonAsset);
-
-        if (data.assets && Array.isArray(data.assets)) {
+        if (data.assets && data.assets.length > 0) {
+          fetchChartData(data, timeRange, comparisonAsset);
           data.assets.forEach(asset => {
             WebSocketService.subscribeToAsset(asset.symbol);
           });
         }
 
         WebSocketService.onPriceUpdate((update) => {
-          dispatch(updatePortfolio({
-            id: id,
-            changes: {
-              assets: portfolio.assets.map(asset => 
+          setPortfolio(prevPortfolio => {
+            if (!prevPortfolio) return null;
+            return {
+              ...prevPortfolio,
+              assets: prevPortfolio.assets.map(asset => 
                 asset.symbol === update.symbol 
                   ? { ...asset, current_price: update.price, total_value: asset.quantity * update.price }
                   : asset
               )
-            }
-          }));
+            };
+          });
         });
       } catch (error) {
         dispatch(fetchPortfoliosFailure(error.message));
@@ -120,10 +121,10 @@ const PortfolioView = () => {
         });
       }
     };
-  }, [dispatch, id, timeRange, comparisonAsset, fetchChartData, portfolio, navigate]);
+  }, [dispatch, id, timeRange, comparisonAsset, fetchChartData, navigate, portfolio]);
 
   useEffect(() => {
-    if (portfolio) {
+    if (portfolio && portfolio.assets && portfolio.assets.length > 0) {
       fetchChartData(portfolio, timeRange, comparisonAsset);
     }
   }, [portfolio, timeRange, comparisonAsset, fetchChartData]);
@@ -209,7 +210,7 @@ const PortfolioView = () => {
     }
   };
 
-  if (loading) return <Layout><div>Loading...</div></Layout>;
+  if (loading) return <Layout><LoadingSpinner /></Layout>;
   if (error) return <Layout><div>Error: {error}</div></Layout>;
   if (!portfolio) return <Layout><div>Portfolio not found</div></Layout>;
 

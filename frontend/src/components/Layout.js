@@ -1,9 +1,10 @@
+// File: frontend/src/components/Layout.js
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../redux/reducers/authReducer';
 import { FaUser, FaSearch, FaTwitter, FaFacebook, FaLinkedin, FaBars, FaTimes, FaCog } from 'react-icons/fa';
-import { FormattedMessage, useIntl } from 'react-intl'; // Keep useIntl import
+import { FormattedMessage, useIntl } from 'react-intl';
 
 const Layout = ({ children }) => {
   const { isAuthenticated, user } = useSelector(state => state.auth);
@@ -11,7 +12,7 @@ const Layout = ({ children }) => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const intl = useIntl(); // Keep this line
+  const intl = useIntl();
 
   const handleLogout = () => {
     dispatch(logout());
@@ -27,7 +28,6 @@ const Layout = ({ children }) => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  // Example usage of intl
   const placeholderText = intl.formatMessage({ id: 'search.placeholder', defaultMessage: 'Search...' });
 
   return (
@@ -48,6 +48,7 @@ const Layout = ({ children }) => {
               <Link to="/news" className="hover:text-accent py-2 md:py-0"><FormattedMessage id="nav.news" /></Link>
               <Link to="/earnings" className="hover:text-accent py-2 md:py-0"><FormattedMessage id="nav.earnings" /></Link>
               <Link to="/portfolio" className="hover:text-accent py-2 md:py-0"><FormattedMessage id="nav.portfolio" /></Link>
+              <Link to="/watchlist" className="hover:text-accent py-2 md:py-0"><FormattedMessage id="nav.watchlist" /></Link>
             </div>
           </nav>
           <form onSubmit={handleSearch} className="hidden md:flex">
@@ -70,12 +71,10 @@ const Layout = ({ children }) => {
                   <span className="block px-4 py-2 text-sm text-gray-700">
                     <FormattedMessage id="nav.welcome" values={{ email: user.email }} />
                   </span>
-                  {/* Added link to profile */}
                   <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                     <FaUser className="inline-block mr-2" />
                     <FormattedMessage id="nav.profile" />
                   </Link>
-                  {/* Added link to user settings */}
                   <Link to="/user-settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                     <FaCog className="inline-block mr-2" />
                     <FormattedMessage id="nav.settings" />

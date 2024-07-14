@@ -1,3 +1,4 @@
+// File: frontend/src/pages/Profile.js
 import React, { useState, useEffect } from 'react';
 import { getUserSettings, updateUserSettings } from '../services/api';
 import Layout from '../components/Layout';
