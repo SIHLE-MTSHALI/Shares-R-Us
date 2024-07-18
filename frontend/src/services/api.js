@@ -74,6 +74,16 @@ export const login = async (credentials) => {
   }
 };
 
+export const getRandomAssets = async (count) => {
+  try {
+    const response = await api.get(`/random-assets?count=${count}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching random assets:', error);
+    throw error;
+  }
+};
+
 export const register = (userData) => api.post('/register', userData);
 
 export const getPortfolios = async () => {
@@ -205,7 +215,12 @@ export const getWatchlist = async () => {
     return response.data;
   } catch (error) {
     console.error('Error fetching watchlist:', error);
-    throw error;
+    if (error.response && error.response.status === 404) {
+      console.warn('Watchlist endpoint not found. Make sure it is implemented on the backend.');
+      return []; // Return an empty array if the endpoint doesn't exist
+    }
+    toast.error('Failed to fetch watchlist. Please try again later.');
+    return []; // Return an empty array instead of throwing an error
   }
 };
 
@@ -235,8 +250,8 @@ export const getEarningsEvents = async () => {
     return response.data;
   } catch (error) {
     console.error('Error fetching earnings events:', error);
-    toast.error('Failed to fetch earnings events');
-    return [];
+    toast.error('Failed to fetch earnings events. Please try again later.');
+    return []; // Return an empty array instead of throwing an error
   }
 };
 

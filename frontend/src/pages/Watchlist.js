@@ -23,8 +23,8 @@ const Watchlist = () => {
         setFilteredWatchlist(response);
       } catch (error) {
         console.error('Error fetching watchlist:', error);
-        setError('Failed to fetch watchlist');
-        toast.error('Failed to fetch watchlist');
+        setError('Failed to fetch watchlist. Please try again later.');
+        toast.error('Failed to fetch watchlist. Please try again later.');
       } finally {
         setLoading(false);
       }
@@ -89,19 +89,25 @@ const Watchlist = () => {
     <Layout>
       <h2 className="text-2xl font-bold mb-6">Watchlist</h2>
       <SearchFilter onSearch={handleSearch} onFilter={handleFilter} />
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredWatchlist.map(item => (
-          <Stock
-            key={item.symbol}
-            symbol={item.symbol}
-            name={item.name}
-            price={item.price}
-            change={item.change}
-            onRemove={() => handleRemoveFromWatchlist(item.symbol)}
-            onAdd={() => handleAddToWatchlist(item.symbol)}
-          />
-        ))}
-      </div>
+      {filteredWatchlist.length === 0 ? (
+        <div className="text-center py-4">
+          Your watchlist is empty. Add some assets to get started!
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredWatchlist.map(item => (
+            <Stock
+              key={item.symbol}
+              symbol={item.symbol}
+              name={item.name}
+              price={item.price}
+              change={item.change}
+              onRemove={() => handleRemoveFromWatchlist(item.symbol)}
+              onAdd={() => handleAddToWatchlist(item.symbol)}
+            />
+          ))}
+        </div>
+      )}
     </Layout>
   );
 };

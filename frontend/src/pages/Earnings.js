@@ -3,7 +3,7 @@ import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import Layout from '../components/Layout';
-import { getEarningsEvents } from '../services/api';
+import { getEarningsEvents, getRandomAssets } from '../services/api';
 import { toast } from 'react-toastify';
 import MarketOpeningTimes from '../components/MarketOpeningTimes';
 
@@ -14,30 +14,42 @@ const Earnings = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchEarningsEvents = async () => {
+    const fetchData = async () => {
       try {
         setIsLoading(true);
-        const data = await getEarningsEvents();
-        const formattedEvents = data.map(event => ({
-          ...event,
-          start: new Date(event.date),
-          end: new Date(event.date),
-          title: `${event.company} Earnings Call`,
-        }));
-        setEvents(formattedEvents);
+        let data = await getEarningsEvents();
+        
+        // If no events are returned, fetch 5 random assets
+        if (data.length === 0) {
+          const randomAssets = await getRandomAssets(5);
+          data = randomAssets.map(asset => ({
+            id: asset.symbol,
+            symbol: asset.symbol,
+            company: asset.name,
+            date: moment().format('YYYY-MM-DD'), // Set to current date
+            estimatedEPS: 0, // Default value
+            actualEPS: null
+          }));
+        }
+        
+        setEvents(data);
       } catch (error) {
-        console.error('Error fetching earnings events:', error);
-        toast.error('Failed to fetch earnings events');
+        console.error('Error fetching data:', error);
+        toast.error('Error fetching data. Please try again later.');
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchEarningsEvents();
+    fetchData();
   }, []);
 
   if (isLoading) {
-    return <Layout><div>Loading earnings data...</div></Layout>;
+    return <Layout><div>Loading data...</div></Layout>;
+  }
+
+  if (events.length === 0) {
+    return <Layout><div>No data available at the moment.</div></Layout>;
   }
 
   return (
@@ -46,7 +58,11 @@ const Earnings = () => {
       <div className="card mb-8">
         <Calendar
           localizer={localizer}
-          events={events}
+          events={events.map(event => ({
+            ...event,
+            start: new Date(event.date),
+            end: new Date(event.date)
+          }))}
           startAccessor="start"
           endAccessor="end"
           style={{ height: 500 }}

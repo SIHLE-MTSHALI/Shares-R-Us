@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 from app.core.security import get_current_user
-from app.schemas.portfolio import Portfolio, PortfolioCreate
+from app.schemas.portfolio import Portfolio, PortfolioCreate, StockCreate
 from app.crud.portfolio import (
     create_portfolio, get_user_portfolios, add_stock_to_portfolio,
     get_portfolio, update_portfolio_db, delete_portfolio_db
@@ -24,7 +24,8 @@ async def get_portfolios(current_user: User = Depends(get_current_user), db: Ses
             description=getattr(p, 'description', None),
             user_id=p.user_id,
             total_value=p.total_value,
-            asset_count=p.asset_count
+            asset_count=p.asset_count,
+            stocks=p.stocks  # Include stocks in the response
         ) for p in portfolios]
     except Exception as e:
         logger.error(f"Error fetching portfolios: {str(e)}", exc_info=True)
@@ -52,12 +53,18 @@ async def read_portfolio(
         raise HTTPException(status_code=404, detail="Portfolio not found")
     return portfolio
 
-@router.post("/portfolios/{portfolio_id}/stocks")
-async def add_stock(portfolio_id: int, stock_symbol: str, quantity: int, purchase_price: float, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+@router.post("/portfolios/{portfolio_id}/stocks", response_model=Portfolio)
+async def add_stock(
+    portfolio_id: int, 
+    stock: StockCreate, 
+    current_user: User = Depends(get_current_user), 
+    db: Session = Depends(get_db)
+):
     portfolio = get_portfolio(db, portfolio_id)
     if not portfolio or portfolio.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="Portfolio not found")
-    return add_stock_to_portfolio(db, portfolio_id, stock_symbol, quantity, purchase_price)
+    updated_portfolio = add_stock_to_portfolio(db, portfolio_id, stock)
+    return updated_portfolio
 
 @router.put("/portfolios/{portfolio_id}", response_model=Portfolio)
 async def update_portfolio(

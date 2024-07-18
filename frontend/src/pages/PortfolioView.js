@@ -85,10 +85,10 @@ const PortfolioView = () => {
         const data = await getPortfolio(id);
         dispatch(fetchPortfoliosSuccess([data]));
         setPortfolio(data);
-        if (data.assets && data.assets.length > 0) {
+        if (data.stocks && data.stocks.length > 0) {
           fetchChartData(data, timeRange, comparisonAsset);
-          data.assets.forEach(asset => {
-            WebSocketService.subscribeToAsset(asset.symbol);
+          data.stocks.forEach(stock => {
+            WebSocketService.subscribeToAsset(stock.symbol);
           });
         }
 
@@ -97,10 +97,10 @@ const PortfolioView = () => {
             if (!prevPortfolio) return null;
             return {
               ...prevPortfolio,
-              assets: prevPortfolio.assets.map(asset => 
-                asset.symbol === update.symbol 
-                  ? { ...asset, current_price: update.price, total_value: asset.quantity * update.price }
-                  : asset
+              stocks: prevPortfolio.stocks.map(stock => 
+                stock.symbol === update.symbol 
+                  ? { ...stock, current_price: update.price, total_value: stock.quantity * update.price }
+                  : stock
               )
             };
           });
@@ -115,16 +115,16 @@ const PortfolioView = () => {
 
     return () => {
       WebSocketService.offPriceUpdate();
-      if (portfolio && portfolio.assets && Array.isArray(portfolio.assets)) {
-        portfolio.assets.forEach(asset => {
-          WebSocketService.unsubscribeFromAsset(asset.symbol);
+      if (portfolio && portfolio.stocks && Array.isArray(portfolio.stocks)) {
+        portfolio.stocks.forEach(stock => {
+          WebSocketService.unsubscribeFromAsset(stock.symbol);
         });
       }
     };
-  }, [dispatch, id, timeRange, comparisonAsset, fetchChartData, navigate, portfolio]);
+  }, [comparisonAsset, dispatch, fetchChartData, id, navigate, portfolio, timeRange]);
 
   useEffect(() => {
-    if (portfolio && portfolio.assets && portfolio.assets.length > 0) {
+    if (portfolio && portfolio.stocks && portfolio.stocks.length > 0) {
       fetchChartData(portfolio, timeRange, comparisonAsset);
     }
   }, [portfolio, timeRange, comparisonAsset, fetchChartData]);
@@ -158,8 +158,7 @@ const PortfolioView = () => {
   const handleAddAsset = async (e) => {
     e.preventDefault();
     try {
-      await addAssetToPortfolio(id, newAsset);
-      const updatedPortfolio = await getPortfolio(id);
+      const updatedPortfolio = await addAssetToPortfolio(id, newAsset);
       setPortfolio(updatedPortfolio);
       setNewAsset({ symbol: '', quantity: '', purchasePrice: '' });
       toast.success('Asset added successfully');
@@ -177,8 +176,7 @@ const PortfolioView = () => {
           label: 'Yes',
           onClick: async () => {
             try {
-              await removeAssetFromPortfolio(id, assetId);
-              const updatedPortfolio = await getPortfolio(id);
+              const updatedPortfolio = await removeAssetFromPortfolio(id, assetId);
               setPortfolio(updatedPortfolio);
               toast.success('Asset removed successfully');
             } catch (error) {
@@ -286,12 +284,12 @@ const PortfolioView = () => {
             <div className="bg-white p-4 rounded-lg shadow">
               <h2 className="text-xl font-semibold mb-2">Portfolio Details</h2>
               <p>Total Value: ${portfolio.total_value?.toFixed(2) || '0.00'}</p>
-              <p>Number of Assets: {portfolio.assets?.length || 0}</p>
+              <p>Number of Assets: {portfolio.stocks?.length || 0}</p>
             </div>
           </div>
           <div className="bg-white p-4 rounded-lg shadow mb-4">
             <h2 className="text-xl font-semibold mb-2">Assets</h2>
-            {portfolio.assets && portfolio.assets.length > 0 ? (
+            {portfolio.stocks && portfolio.stocks.length > 0 ? (
               <table className="w-full">
                 <thead>
                   <tr>
@@ -303,15 +301,15 @@ const PortfolioView = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {portfolio.assets.map(asset => (
-                    <tr key={asset.id}>
-                      <td>{asset.symbol}</td>
-                      <td>{asset.quantity}</td>
-                      <td>${asset.current_price?.toFixed(2) || 'N/A'}</td>
-                      <td>${asset.total_value?.toFixed(2) || 'N/A'}</td>
+                  {portfolio.stocks.map(stock => (
+                    <tr key={stock.id}>
+                      <td>{stock.symbol}</td>
+                      <td>{stock.quantity}</td>
+                      <td>${stock.current_price?.toFixed(2) || 'N/A'}</td>
+                      <td>${stock.total_value?.toFixed(2) || 'N/A'}</td>
                       <td>
                         <button 
-                          onClick={() => handleRemoveAsset(asset.id)}
+                          onClick={() => handleRemoveAsset(stock.id)}
                           className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition-colors"
                         >
                           Remove
