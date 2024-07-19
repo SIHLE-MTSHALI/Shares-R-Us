@@ -1,7 +1,10 @@
 import aiohttp
 from app.core.config import settings
+from sqlalchemy.orm import Session
+from app.models.watchlist import Watchlist
+from typing import List, Dict, Any
 
-async def search_assets(query: str):
+async def search_assets(query: str) -> List[Dict[str, Any]]:
     async with aiohttp.ClientSession() as session:
         params = {
             "function": "SYMBOL_SEARCH",
@@ -38,3 +41,29 @@ async def get_asset_details(symbol: str):
                 "change_percent": float(quote.get("10. change percent", "0").rstrip('%')),
                 "last_trading_day": quote.get("07. latest trading day", "N/A")
             }
+
+async def get_watchlist(db: Session, user_id: int):
+    watchlist = db.query(Watchlist).filter(Watchlist.user_id == user_id).all()
+    watchlist_data = []
+    for item in watchlist:
+        asset_details = await get_asset_details(item.symbol)
+        watchlist_data.append(asset_details)
+    return watchlist_data
+
+async def add_to_watchlist(db: Session, user_id: int, symbol: str):
+    existing_item = db.query(Watchlist).filter(Watchlist.user_id == user_id, Watchlist.symbol == symbol).first()
+    if existing_item:
+        return {"message": "Asset already in watchlist"}
+    new_item = Watchlist(user_id=user_id, symbol=symbol)
+    db.add(new_item)
+    db.commit()
+    db.refresh(new_item)
+    return {"message": "Asset added to watchlist"}
+
+async def remove_from_watchlist(db: Session, user_id: int, symbol: str):
+    item = db.query(Watchlist).filter(Watchlist.user_id == user_id, Watchlist.symbol == symbol).first()
+    if not item:
+        return {"message": "Asset not found in watchlist"}
+    db.delete(item)
+    db.commit()
+    return {"message": "Asset removed from watchlist"}

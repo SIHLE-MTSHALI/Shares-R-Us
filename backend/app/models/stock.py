@@ -9,7 +9,8 @@ class Stock(Base):
     symbol = Column(String, index=True)
     quantity = Column(Float)
     purchase_price = Column(Float)
-    current_price = Column(Float)
+    current_price = Column(Float, nullable=True)
+    asset_type = Column(String, nullable=False, default="stock")  # Updated this line
     portfolio_id = Column(Integer, ForeignKey("portfolios.id"))
 
     portfolio = relationship("Portfolio", back_populates="stocks")
@@ -17,4 +18,6 @@ class Stock(Base):
 
     @property
     def current_value(self):
-        return self.quantity * self.current_price
+        if self.quantity is not None and self.current_price is not None:
+            return self.quantity * self.current_price
+        return None

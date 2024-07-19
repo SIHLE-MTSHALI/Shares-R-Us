@@ -9,7 +9,7 @@ ALPHA_VANTAGE_API_KEY = os.getenv("ALPHA_VANTAGE_API_KEY")
 BASE_URL = "https://www.alphavantage.co/query"
 
 async def get_market_overview():
-    symbols = ["SPY", "QQQ", "DIA"]  # Example market indices
+    symbols = ["SPY", "QQQ", "DIA", "TSLA", "APPL"]  # Example market indices
     async with aiohttp.ClientSession() as session:
         tasks = [fetch_quote(session, symbol) for symbol in symbols]
         return await asyncio.gather(*tasks)

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, Float
 from sqlalchemy.orm import relationship
 from app.db.base_class import Base
 
@@ -15,7 +15,7 @@ class Portfolio(Base):
 
     @property
     def total_value(self):
-        return sum(stock.current_value for stock in self.stocks)
+        return sum(stock.current_value for stock in self.stocks if stock.current_value is not None)
 
     @property
     def asset_count(self):

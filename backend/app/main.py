@@ -1,4 +1,4 @@
-from fastapi import Depends, FastAPI, HTTPException, APIRouter
+from fastapi import Depends, FastAPI, HTTPException, APIRouter, status
 from fastapi.middleware.cors import CORSMiddleware
 from app.schemas.user import User
 from app.services import asset_service, earnings_service
@@ -28,9 +28,6 @@ logger = logging.getLogger(__name__)
 @app.on_event("startup")
 def on_startup():
     init_db(next(get_db()))
-
-# Create tables
-# Base.metadata.create_all(bind=engine)
 
 # Socket.IO setup
 sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins='*')
@@ -89,6 +86,27 @@ async def get_trending_analysis():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/v1/watchlist")
+async def get_watchlist(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    try:
+        return await asset_service.get_watchlist(db, current_user.id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/watchlist")
+async def add_to_watchlist(symbol: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    try:
+        return await asset_service.add_to_watchlist(db, current_user.id, symbol)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/api/v1/watchlist/{symbol}")
+async def remove_from_watchlist(symbol: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    try:
+        return await asset_service.remove_from_watchlist(db, current_user.id, symbol)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Socket.IO events
 @sio.event
 async def connect(sid, environ):
@@ -119,7 +137,6 @@ async def emit_price_updates():
 @app.on_event("startup")
 async def startup_event():
     asyncio.create_task(emit_price_updates())
-
 
 # Set up a background task to periodically update trending analyses
 @app.on_event("startup")
@@ -171,7 +188,7 @@ def read_portfolio(portfolio_id: int, db: Session = Depends(get_db)):
 @app.put("/api/v1/portfolios/{portfolio_id}", response_model=portfolio_schema.Portfolio)
 def update_portfolio(portfolio_id: int, portfolio: portfolio_schema.PortfolioUpdate, db: Session = Depends(get_db)):
     try:
-        updated_portfolio = crud_portfolio.update_portfolio(db, portfolio_id, portfolio.dict())
+        updated_portfolio = crud_portfolio.update_portfolio(db, portfolio_id, portfolio)
         if updated_portfolio is None:
             raise HTTPException(status_code=404, detail="Portfolio not found")
         return updated_portfolio
@@ -218,7 +235,7 @@ async def get_company_earnings(symbol: str):
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
+    
 @app.get("/api/v1/earnings-surprises/{symbol}")
 async def get_earnings_surprises(symbol: str):
     try:
@@ -238,7 +255,7 @@ async def add_asset_to_portfolio(
     try:
         return await crud_portfolio.add_asset_to_portfolio(db, portfolio_id, asset, current_user.id)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
 
 @app.delete("/api/v1/portfolios/{portfolio_id}/assets/{asset_id}", response_model=bool)
 async def remove_asset_from_portfolio(

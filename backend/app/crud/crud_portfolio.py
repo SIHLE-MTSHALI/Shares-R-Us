@@ -1,7 +1,8 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_
+from sqlalchemy import func
 from app.models import User, Portfolio, Stock, HistoricalValue
-from app.schemas import portfolio as portfolio_schema
+from app.schemas.portfolio import PortfolioCreate, PortfolioUpdate
+from app.schemas.stock import StockCreate
 from datetime import datetime, timedelta
 from typing import List, Dict, Any
 
@@ -11,18 +12,23 @@ def get_portfolio(db: Session, portfolio_id: int) -> Portfolio:
 def get_user_portfolios(db: Session, user_id: int) -> List[Portfolio]:
     return db.query(Portfolio).filter(Portfolio.user_id == user_id).all()
 
-def create_portfolio(db: Session, portfolio: dict, user_id: int):
-    db_portfolio = Portfolio(**portfolio, user_id=user_id)
+def create_portfolio(db: Session, portfolio: PortfolioCreate, user_id: int):
+    db_portfolio = Portfolio(**portfolio.dict(exclude={'stocks'}), user_id=user_id)
+    for stock in portfolio.stocks:
+        db_stock = Stock(**stock.dict(), portfolio=db_portfolio)
+        db.add(db_stock)
     db.add(db_portfolio)
     db.commit()
     db.refresh(db_portfolio)
     return db_portfolio
 
-def update_portfolio(db: Session, portfolio_id: int, portfolio_data: Dict[str, Any]) -> Portfolio:
+def update_portfolio(db: Session, portfolio_id: int, portfolio_data: PortfolioUpdate) -> Portfolio:
     db_portfolio = get_portfolio(db, portfolio_id)
     if db_portfolio:
-        for key, value in portfolio_data.items():
-            setattr(db_portfolio, key, value)
+        update_data = portfolio_data.dict(exclude_unset=True)
+        for key, value in update_data.items():
+            if key != 'stocks':
+                setattr(db_portfolio, key, value)
         db.commit()
         db.refresh(db_portfolio)
     return db_portfolio
@@ -35,8 +41,8 @@ def delete_portfolio(db: Session, portfolio_id: int) -> bool:
         return True
     return False
 
-def add_stock_to_portfolio(db: Session, portfolio_id: int, stock_data: Dict[str, Any]) -> Stock:
-    db_stock = Stock(**stock_data, portfolio_id=portfolio_id)
+def add_stock_to_portfolio(db: Session, portfolio_id: int, stock_data: StockCreate) -> Stock:
+    db_stock = Stock(**stock_data.dict(), portfolio_id=portfolio_id)
     db.add(db_stock)
     db.commit()
     db.refresh(db_stock)
@@ -71,11 +77,9 @@ def get_portfolio_history(db: Session, portfolio_id: int, range: str) -> List[Di
         HistoricalValue.date,
         func.sum(HistoricalValue.value).label('total_value')
     ).join(Stock).filter(
-        and_(
-            Stock.portfolio_id == portfolio_id,
-            HistoricalValue.date >= start_date,
-            HistoricalValue.date <= end_date
-        )
+        Stock.portfolio_id == portfolio_id,
+        HistoricalValue.date >= start_date,
+        HistoricalValue.date <= end_date
     ).group_by(HistoricalValue.date).order_by(HistoricalValue.date).all()
 
     return [
@@ -97,12 +101,19 @@ def update_stock_price(db: Session, stock_id: int, new_price: float) -> Stock:
         db.refresh(db_stock)
     return db_stock
 
-async def add_asset_to_portfolio(db: Session, portfolio_id: int, asset: portfolio_schema.StockCreate, user_id: int) -> Stock:
+async def add_asset_to_portfolio(db: Session, portfolio_id: int, asset: StockCreate, user_id: int) -> Stock:
     portfolio = get_portfolio(db, portfolio_id)
     if not portfolio or portfolio.user_id != user_id:
         raise ValueError("Portfolio not found or you don't have permission to modify it")
     
-    db_asset = Stock(**asset.dict(), portfolio_id=portfolio_id)
+    db_asset = Stock(
+        symbol=asset.symbol,
+        quantity=asset.quantity,
+        purchase_price=asset.purchase_price,
+        portfolio_id=portfolio_id,
+        asset_type=asset.asset_type,
+        current_price=None
+    )
     db.add(db_asset)
     db.commit()
     db.refresh(db_asset)
@@ -120,43 +131,3 @@ async def remove_asset_from_portfolio(db: Session, portfolio_id: int, asset_id: 
     db.delete(asset)
     db.commit()
     return True
-
-def get_portfolio_performance(db: Session, portfolio_id: int, timeframe: str) -> Dict[str, Any]:
-    portfolio = get_portfolio(db, portfolio_id)
-    if not portfolio:
-        raise ValueError("Portfolio not found")
-
-    end_date = datetime.now()
-    if timeframe == '1D':
-        start_date = end_date - timedelta(days=1)
-    elif timeframe == '1W':
-        start_date = end_date - timedelta(weeks=1)
-    elif timeframe == '1M':
-        start_date = end_date - timedelta(days=30)
-    elif timeframe == '3M':
-        start_date = end_date - timedelta(days=90)
-    elif timeframe == '1Y':
-        start_date = end_date - timedelta(days=365)
-    elif timeframe == 'YTD':
-        start_date = datetime(end_date.year, 1, 1)
-    else:
-        raise ValueError("Invalid timeframe")
-
-    start_value = db.query(func.sum(HistoricalValue.value)).join(Stock).filter(
-        and_(
-            Stock.portfolio_id == portfolio_id,
-            HistoricalValue.date == start_date
-        )
-    ).scalar() or 0.0
-
-    end_value = get_portfolio_current_value(db, portfolio_id)
-
-    absolute_change = end_value - start_value
-    percentage_change = (absolute_change / start_value) * 100 if start_value != 0 else 0
-
-    return {
-        "start_value": float(start_value),
-        "end_value": float(end_value),
-        "absolute_change": float(absolute_change),
-        "percentage_change": float(percentage_change)
-    }

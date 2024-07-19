@@ -12,3 +12,4 @@ class User(Base):
     
     # Update the relationship reference
     portfolios = relationship("Portfolio", back_populates="user")
+    watchlist = relationship("Watchlist", back_populates="user")

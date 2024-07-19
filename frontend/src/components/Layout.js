@@ -1,10 +1,10 @@
-// File: frontend/src/components/Layout.js
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../redux/reducers/authReducer';
 import { FaUser, FaSearch, FaTwitter, FaFacebook, FaLinkedin, FaBars, FaTimes, FaCog } from 'react-icons/fa';
 import { FormattedMessage, useIntl } from 'react-intl';
+import logo from '../assets/images/logo.png'; // Import logo
 
 const Layout = ({ children }) => {
   const { isAuthenticated, user } = useSelector(state => state.auth);
@@ -34,8 +34,9 @@ const Layout = ({ children }) => {
     <div className="min-h-screen flex flex-col">
       <header className="bg-primary text-white p-4">
         <div className="container mx-auto flex justify-between items-center">
-          <Link to="/" className="text-2xl font-bold">
-            <img src="/logo.png" alt="Shares'R'Us Logo" className="h-8" />
+          <Link to="/" className="text-2xl font-bold flex items-center">
+            <img src={logo} alt="Shares'R'Us Logo" className="h-8 mr-2" /> {/* Add the logo here */}
+            Shares'R'Us
           </Link>
           <div className="md:hidden">
             <button onClick={toggleMenu} className="focus:outline-none">

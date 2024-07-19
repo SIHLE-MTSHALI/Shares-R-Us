@@ -120,6 +120,9 @@ export const addAssetToPortfolio = async (portfolioId, assetData) => {
     const response = await api.post(`/portfolios/${portfolioId}/assets`, assetData);
     return response.data;
   } catch (error) {
+    if (error.response && error.response.status === 422) {
+      throw error;  // Rethrow the error to be handled in the component
+    }
     console.error('Error adding asset to portfolio:', error);
     throw error;
   }
@@ -252,6 +255,27 @@ export const getEarningsEvents = async () => {
     console.error('Error fetching earnings events:', error);
     toast.error('Failed to fetch earnings events. Please try again later.');
     return []; // Return an empty array instead of throwing an error
+  }
+};
+
+export const submitContactForm = async (formData) => {
+  try {
+    const response = await api.post('/contact', formData);
+    return response.data;
+  } catch (error) {
+    console.error('Error submitting contact form:', error);
+    throw error;
+  }
+};
+
+export const getCompanyEarnings = async (symbol) => {
+  try {
+    const response = await api.get(`/company-earnings/${symbol}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching company earnings:', error);
+    toast.error('Failed to fetch company earnings. Please try again later.');
+    throw error;
   }
 };
 

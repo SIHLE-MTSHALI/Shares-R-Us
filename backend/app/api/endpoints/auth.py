@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.core.security import create_access_token
 from app.utils.password import verify_password, get_password_hash
 from app.schemas.user import UserCreate, User, PasswordReset, Token
-from app.crud.user import create_user, get_user_by_email, update_user_password, authenticate_user
+from app.crud import create_user, get_user_by_email, update_user_password, authenticate_user, crud_user
 from app.db.session import get_db
 from app.utils.email import send_reset_email
 from app.utils.security import create_reset_token, decode_reset_token
